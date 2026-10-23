@@ -15,7 +15,10 @@ export function playPolishAudio(audioUrl?: string, fallbackTextPl?: string, slow
   }
 
   if (audioUrl) {
-    const audio = new Audio(audioUrl);
+    const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
+    const resolvedUrl =
+      audioUrl.startsWith('/') && basePath ? `${basePath}${audioUrl}` : audioUrl;
+    const audio = new Audio(resolvedUrl);
     audio.playbackRate = slow ? 0.78 : 1.0;
     currentAudio = audio;
     audio.play().catch(() => {
