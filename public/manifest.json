@@ -1,0 +1,10 @@
+{
+  "name": "Zaczynam mówić po polsku (A0–B2)",
+  "short_name": "Po Polsku B2",
+  "description": "Образовательная игра-приложение для изучения польского языка от A0 до B2 и подготовки к госэкзамену на Резидента ЕС",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#dc2626",
+  "lang": "ru"
+}

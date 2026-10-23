@@ -1,0 +1,158 @@
+import { CEFRLevel } from '@/types/curriculum';
+
+export interface RoadmapMilestone {
+  releaseNumber: number;
+  moduleId: string;
+  level: CEFRLevel;
+  titlePl: string;
+  titleRu: string;
+  grammarFocus: string;
+  realLifeScenario: string;
+  status: 'available' | 'upcoming';
+  examMilestone?: 'B1_CERT' | 'B2_CERT';
+}
+
+export const COURSE_ROADMAP: RoadmapMilestone[] = [
+  {
+    releaseNumber: 1,
+    moduleId: 'mod-a0-01',
+    level: 'A0',
+    titlePl: 'Pierwszy dzień w Polsce: Wymowa, Pan/Pani i PESEL',
+    titleRu: 'Первый день в Польше: произношение, формула Pan/Pani и визит в ужонд',
+    grammarFocus: 'Глагол być, nazywać się, вежливое обращение Pan/Pani/Państwo + 3 л.',
+    realLifeScenario: 'Urząd Miasta: получение номера PESEL и заполнение анкеты',
+    status: 'available',
+  },
+  {
+    releaseNumber: 2,
+    moduleId: 'mod-a1-01',
+    level: 'A1',
+    titlePl: 'Kim jesteś i skąd pochodzisz? Czas teraźniejszy i Narzędnik',
+    titleRu: 'Кто ты и откуда? Настоящее время и Творительный падеж',
+    grammarFocus: 'Спряжения -am/-asz, -ę/-esz (-ować -> -uję), Narzędnik профессий и национальностей',
+    realLifeScenario: 'Знакомство с соседями по дому (klatka schodowa) и коллегами',
+    status: 'upcoming',
+  },
+  {
+    releaseNumber: 3,
+    moduleId: 'mod-a1-02',
+    level: 'A1',
+    titlePl: 'Zakupy, Biedronka, BLIK i Biernik',
+    titleRu: 'Покупки, супермаркет, касса и Винительный падеж (Biernik)',
+    grammarFocus: 'Biernik ед. ч. (одушевлённый/неодушевлённый муж. род, жен. род на -ę/-ą)',
+    realLifeScenario: 'Покупки в пекарне, диалог на кассе и касса самообслуживания',
+    status: 'upcoming',
+  },
+  {
+    releaseNumber: 4,
+    moduleId: 'mod-a1-03',
+    level: 'A1',
+    titlePl: 'Czego nie ma i ile to kosztuje? Dopełniacz',
+    titleRu: 'Чего нет и сколько стоит? Родительный падеж (Dopełniacz)',
+    grammarFocus: 'Dopełniacz после отрицания (nie ma), количества и глаголов szukać, potrzebować, uczyć się',
+    realLifeScenario: 'Аптека, поиск товаров и запись на услуги по датам',
+    status: 'upcoming',
+  },
+  {
+    releaseNumber: 5,
+    moduleId: 'mod-a1-04',
+    level: 'A1',
+    titlePl: 'Gdzie mieszkasz? Miejscownik i komunikacja miejska',
+    titleRu: 'Где мы живём и ездим? Предложный падеж (Miejscownik) и транспорт',
+    grammarFocus: 'Miejscownik (w/na) + чередования согласных (Polska -> w Polsce, biuro -> w biurze)',
+    realLifeScenario: 'Вокзал PKP Intercity, покупка билетов ZTM/MPK и ориентация в городе',
+    status: 'upcoming',
+  },
+  {
+    releaseNumber: 6,
+    moduleId: 'mod-a1-05',
+    level: 'A1',
+    titlePl: 'Co robiłeś wczoraj? Czas przeszły + Egzamin A1',
+    titleRu: 'Вчера и раньше: Прошедшее время + Рубежный экзамен A1',
+    grammarFocus: 'Czas przeszły во всех лицах и родах (-łem/-łam, -liśmy/-łyśmy)',
+    realLifeScenario: 'Рассказ о переезде в Польшу и сдача первого 5-модульного среза A1',
+    status: 'upcoming',
+  },
+  {
+    releaseNumber: 7,
+    moduleId: 'mod-a2-01',
+    level: 'A2',
+    titlePl: 'Plany i rezultaty: Aspekt czasownika i Czas przyszły',
+    titleRu: 'Планы и результат: Вид глагола и Будущее время',
+    grammarFocus: 'Aspekt niedokonany vs dokonany (robić/zrobić, brać/wziąć), будущее составное и простое',
+    realLifeScenario: 'Планирование рабочей недели и договорённости со специалистами',
+    status: 'upcoming',
+  },
+  {
+    releaseNumber: 8,
+    moduleId: 'mod-a2-02',
+    level: 'A2',
+    titlePl: 'U lekarza, NFZ, e-recepta i Celownik',
+    titleRu: 'Врач, поликлиника NFZ, аптека и Дательный падеж (Celownik)',
+    grammarFocus: 'Celownik (mi vs mnie, Panu/Pani), безличные состояния, повелительное наклонение',
+    realLifeScenario: 'Телефонная запись в POZ, описание симптомов и получение больничного L4',
+    status: 'upcoming',
+  },
+  {
+    releaseNumber: 9,
+    moduleId: 'mod-a2-03',
+    level: 'A2',
+    titlePl: 'Wynajem mieszkania, czynsz, awarie i czasowniki ruchu',
+    titleRu: 'Аренда жилья, коммуналка, поломки и глаголы движения',
+    grammarFocus: 'iść/chodzić, jechać/jeździć + приставки (wejść, wyjść, przeprowadzić się), Wołacz',
+    realLifeScenario: 'Чтение договора аренды (umowa najmu), счётчики и звонок арендодателю при поломке',
+    status: 'upcoming',
+  },
+  {
+    releaseNumber: 10,
+    moduleId: 'mod-a2-04',
+    level: 'A2',
+    titlePl: 'Dzieci, szkoła, Librus i Rodzaj męskoosobowy',
+    titleRu: 'Дети, школа, электронный дневник и Мужско-личный род',
+    grammarFocus: 'Rodzaj męskoosobowy vs niemęskoosobowy (Ci dobrzy lekarze byli vs Te dobre lekarki były)',
+    realLifeScenario: 'Родительское собрание и переписка с учителем в дневнике Librus',
+    status: 'upcoming',
+  },
+  {
+    releaseNumber: 11,
+    moduleId: 'mod-a2-05',
+    level: 'A2',
+    titlePl: 'Bank, reklamacje i Stopniowanie przymiotników',
+    titleRu: 'Банк, возврат товара, рекламации и Степени сравнения',
+    grammarFocus: 'Степени сравнения прилагательных и наречий, Biernik мужско-личного рода',
+    realLifeScenario: 'Подача рекламации по гарантии (rękojmia) и выбор банковского тарифа',
+    status: 'upcoming',
+  },
+  {
+    releaseNumber: 12,
+    moduleId: 'mod-a2-06',
+    level: 'A2',
+    titlePl: 'Podróże po Polsce, tradycje i Egzamin A2',
+    titleRu: 'Путешествия по Польше, праздники и Рубежный экзамен A2',
+    grammarFocus: 'Систематизация всех 7 падежей, предлогов и придаточных причины/времени',
+    realLifeScenario: 'Бронирование отдыха, поздравления поляков и полный срез A2',
+    status: 'upcoming',
+  },
+  {
+    releaseNumber: 24,
+    moduleId: 'mod-b1-exam',
+    level: 'B1',
+    titlePl: 'Kamień Milowy B1: Certyfikat do Rezydenta Długoterminowego UE',
+    titleRu: 'РУБЕЖ B1: Полная готовность к госэкзамену на Резидента ЕС и гражданство',
+    grammarFocus: 'Условное наклонение (-bym), числительные, страдательный залог, управление глаголов, парафразы',
+    realLifeScenario: 'Urząd Wojewódzki, трудовое право и симуляция 5 модулей Państwowej Komisji B1 (порог ≥50%)',
+    status: 'upcoming',
+    examMilestone: 'B1_CERT',
+  },
+  {
+    releaseNumber: 36,
+    moduleId: 'mod-b2-exam',
+    level: 'B2',
+    titlePl: 'Kamień Milowy B2: Swobodna argumentacja i Państwowy Egzamin B2',
+    titleRu: 'РУБЕЖ B2: Свободная аргументация, официальный стиль и Госэкзамен B2',
+    grammarFocus: 'Причастия и деепричастия (imiesłowy), номинализация, словообразование, сложный синтаксис B2',
+    realLifeScenario: 'Налоги, правовые споры, написание эссе/жалоб (250 слов) и симуляция экзамена B2 (порог ≥60%)',
+    status: 'upcoming',
+    examMilestone: 'B2_CERT',
+  },
+];
