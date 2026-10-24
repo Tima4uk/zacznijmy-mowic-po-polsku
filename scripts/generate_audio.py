@@ -5,87 +5,168 @@ import edge_tts
 
 sys.stdout.reconfigure(encoding="utf-8")
 
-OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "..", "public", "audio", "mod-a0-01")
+PUBLIC_AUDIO_DIR = os.path.join(os.path.dirname(__file__), "..", "public", "audio")
 
 VOICE_FEMALE = "pl-PL-ZofiaNeural"
 VOICE_MALE = "pl-PL-MarekNeural"
 
-AUDIO_ITEMS = [
-    # Упражнения на аудирование
-    ("ex-kurier-jutro.mp3", VOICE_MALE, "Będę u Pana jutro rano pod sklepem."),
-    (
-        "ex-urzad-telefon.mp3",
-        VOICE_FEMALE,
-        "Dzwonię z Urzędu Wojewódzkiego w sprawie Pana wniosku. Proszę jutro rano o dziewiątej przynieść oryginał paszportu.",
-    ),
-    # Диалог в Urząd Miasta (Урок 1.3)
-    ("dlg-1.mp3", VOICE_FEMALE, "Dzień dobry! W czym mogę Panu pomóc?"),
-    ("dlg-2.mp3", VOICE_MALE, "Dzień dobry! Chcę złożyć wniosek o numer PESEL."),
-    (
-        "dlg-3.mp3",
-        VOICE_FEMALE,
-        "Proszę bardzo. Czy ma Pan przy sobie paszport i wypełniony formularz?",
-    ),
-    ("dlg-4.mp3", VOICE_MALE, "Tak, proszę. Oto mój paszport i formularz."),
-    ("dlg-5.mp3", VOICE_FEMALE, "Dziękuję. Jak ma Pan na imię i skąd Pan jest?"),
-    (
-        "dlg-6.mp3",
-        VOICE_MALE,
-        "Mam na imię Paweł, nazywam się Kowalczyk. Jestem z Białorusi, ale teraz mieszkam we Wrocławiu.",
-    ),
-    (
-        "dlg-7.mp3",
-        VOICE_FEMALE,
-        "Czy to Pana aktualny numer telefonu i adres zamieszkania?",
-    ),
-    ("dlg-8.mp3", VOICE_MALE, "Tak, wszystko się zgadza."),
-    (
-        "dlg-9.mp3",
-        VOICE_FEMALE,
-        "Proszę podpisać tutaj na dole. Numer PESEL jest już gotowy. Do widzenia!",
-    ),
-    # Квест
-    (
-        "quest-npc-1.mp3",
-        VOICE_FEMALE,
-        "Dzień dobry! Zapraszam do stanowiska numer cztery. W czym mogę pomóc?",
-    ),
-    # Словарь SRS (12 карточек)
-    ("voc-byc.mp3", VOICE_MALE, "być. Jestem, jesteś, jest. Jestem z Białorusi, z Mińska."),
-    ("voc-nazywac-sie.mp3", VOICE_MALE, "nazywać się. Nazywam się Paweł Kowalczyk."),
-    ("voc-miec-na-imie.mp3", VOICE_FEMALE, "mieć na imię. Jak ma Pani na imię?"),
-    ("voc-wniosek.mp3", VOICE_MALE, "wniosek. Chcę złożyć wniosek o numer PESEL."),
-    ("voc-sklep.mp3", VOICE_FEMALE, "sklep. Ten sklep jest czynny do dwudziestej drugiej."),
-    ("voc-jutro.mp3", VOICE_MALE, "jutro. Zobaczymy się jutro rano."),
-    ("voc-rano.mp3", VOICE_FEMALE, "rano. Codziennie rano piję kawę."),
-    ("voc-tydzien.mp3", VOICE_MALE, "tydzień. Jestem w Polsce już jeden tydzień."),
-    (
-        "voc-parter.mp3",
-        VOICE_FEMALE,
-        "parter, pierwsze piętro. Kasa urzędu jest na parterze, a pokój numer dwanaście na pierwszym piętrze.",
-    ),
-    (
-        "voc-adres.mp3",
-        VOICE_FEMALE,
-        "adres zamieszkania. Proszę wpisać aktualny adres zamieszkania.",
-    ),
-    ("voc-zgadza-sie.mp3", VOICE_MALE, "zgadza się. Tak, wszystko się zgadza."),
-    ("voc-mieszkac.mp3", VOICE_MALE, "mieszkać. Teraz mieszkam w Polsce."),
-]
+AUDIO_MODULES = {
+    "mod-a0-01": [
+        ("ex-kurier-jutro.mp3", VOICE_MALE, "Będę u Pana jutro rano pod sklepem."),
+        (
+            "ex-urzad-telefon.mp3",
+            VOICE_FEMALE,
+            "Dzwonię z Urzędu Wojewódzkiego w sprawie Pana wniosku. Proszę jutro rano o dziewiątej przynieść oryginał paszportu.",
+        ),
+        ("dlg-1.mp3", VOICE_FEMALE, "Dzień dobry! W czym mogę Panu pomóc?"),
+        ("dlg-2.mp3", VOICE_MALE, "Dzień dobry! Chcę złożyć wniosek o numer PESEL."),
+        (
+            "dlg-3.mp3",
+            VOICE_FEMALE,
+            "Proszę bardzo. Czy ma Pan przy sobie paszport i wypełniony formularz?",
+        ),
+        ("dlg-4.mp3", VOICE_MALE, "Tak, proszę. Oto mój paszport i formularz."),
+        ("dlg-5.mp3", VOICE_FEMALE, "Dziękuję. Jak ma Pan na imię i skąd Pan jest?"),
+        (
+            "dlg-6.mp3",
+            VOICE_MALE,
+            "Mam na imię Paweł, nazywam się Kowalczyk. Jestem z Białorusi, ale teraz mieszkam we Wrocławiu.",
+        ),
+        (
+            "dlg-7.mp3",
+            VOICE_FEMALE,
+            "Czy to Pana aktualny numer telefonu i adres zamieszkania?",
+        ),
+        ("dlg-8.mp3", VOICE_MALE, "Tak, wszystko się zgadza."),
+        (
+            "dlg-9.mp3",
+            VOICE_FEMALE,
+            "Proszę podpisać tutaj na dole. Numer PESEL jest już gotowy. Do widzenia!",
+        ),
+        (
+            "quest-npc-1.mp3",
+            VOICE_FEMALE,
+            "Dzień dobry! Zapraszam do stanowiska numer cztery. W czym mogę pomóc?",
+        ),
+        ("voc-byc.mp3", VOICE_MALE, "być. Jestem, jesteś, jest. Jestem z Białorusi, z Mińska."),
+        ("voc-nazywac-sie.mp3", VOICE_MALE, "nazywać się. Nazywam się Paweł Kowalczyk."),
+        ("voc-miec-na-imie.mp3", VOICE_FEMALE, "mieć na imię. Jak ma Pani na imię?"),
+        ("voc-wniosek.mp3", VOICE_MALE, "wniosek. Chcę złożyć wniosek o numer PESEL."),
+        ("voc-sklep.mp3", VOICE_FEMALE, "sklep. Ten sklep jest czynny do dwudziestej drugiej."),
+        ("voc-jutro.mp3", VOICE_MALE, "jutro. Zobaczymy się jutro rano."),
+        ("voc-rano.mp3", VOICE_FEMALE, "rano. Codziennie rano piję kawę."),
+        ("voc-tydzien.mp3", VOICE_MALE, "tydzień. Jestem w Polsce już jeden tydzień."),
+        (
+            "voc-parter.mp3",
+            VOICE_FEMALE,
+            "parter, pierwsze piętro. Kasa urzędu jest na parterze, a pokój numer dwanaście na pierwszym piętrze.",
+        ),
+        (
+            "voc-adres.mp3",
+            VOICE_FEMALE,
+            "adres zamieszkania. Proszę wpisać aktualny adres zamieszkania.",
+        ),
+        ("voc-zgadza-sie.mp3", VOICE_MALE, "zgadza się. Tak, wszystko się zgadza."),
+        ("voc-mieszkac.mp3", VOICE_MALE, "mieszkać. Teraz mieszkam w Polsce."),
+    ],
+    "mod-a1-01": [
+        (
+            "ex-zawod-pensja.mp3",
+            VOICE_FEMALE,
+            "Jaki ma Pan zawód i jakiej pensji Pan oczekuje?",
+        ),
+        (
+            "ex-kanapa-dywan.mp3",
+            VOICE_MALE,
+            "W dużym pokoju stoi nowa kanapa, a na podłodze leży szary dywan.",
+        ),
+        (
+            "dlg-1.mp3",
+            VOICE_MALE,
+            "Dzień dobry! Widzę, że jest Pan naszym nowym sąsiadem. Nazywam się Marek Kamiński, mieszkam obok.",
+        ),
+        (
+            "dlg-2.mp3",
+            VOICE_MALE,
+            "Dzień dobry, Panie Marku! Bardzo mi miło. Mam na imię Paweł, jestem z Białorusi.",
+        ),
+        (
+            "dlg-3.mp3",
+            VOICE_MALE,
+            "Witamy we Wrocławiu! Czym się Pan zajmuje zawodowo?",
+        ),
+        (
+            "dlg-4.mp3",
+            VOICE_MALE,
+            "Z zawodu jestem programistą. Pracuję zdalnie w polskiej firmie.",
+        ),
+        (
+            "dlg-5.mp3",
+            VOICE_MALE,
+            "Świetnie! A co Pan teraz niesie? Czy to nowa kanapa?",
+        ),
+        (
+            "dlg-6.mp3",
+            VOICE_MALE,
+            "Nie, kanapa już stoi w pokoju. To jest tylko duży dywan na podłogę.",
+        ),
+        (
+            "dlg-7.mp3",
+            VOICE_MALE,
+            "Rozumiem! Gdyby potrzebował Pan pomocy, proszę śmiało pukać.",
+        ),
+        (
+            "quest-npc-1.mp3",
+            VOICE_FEMALE,
+            "Dzień dobry! Czy to Pan jest nowym lokatorem spod ósemki?",
+        ),
+        (
+            "quest-npc-2.mp3",
+            VOICE_FEMALE,
+            "Bardzo mi miło! A czym się Pan zajmuje zawodowo i gdzie Pan pracuje?",
+        ),
+        ("voc-pracowac.mp3", VOICE_MALE, "pracować. Pracuję zdalnie w polskiej firmie."),
+        ("voc-rozumiec.mp3", VOICE_FEMALE, "rozumieć. Przepraszam, jeszcze nie wszystko rozumiem."),
+        ("voc-kupowac.mp3", VOICE_FEMALE, "kupować. Codziennie rano kupuję świeży chleb."),
+        (
+            "voc-bialorusin.mp3",
+            VOICE_MALE,
+            "Białorusin, Białorusinka. Jestem Białorusinem, a moja żona jest Białorusinką.",
+        ),
+        ("voc-programista.mp3", VOICE_MALE, "programista. Z zawodu jestem programistą."),
+        ("voc-sasiad.mp3", VOICE_MALE, "sąsiad, sąsiadka. Pan Marek jest naszym nowym sąsiadem."),
+        ("voc-zawod.mp3", VOICE_FEMALE, "zawód. Kim jest Pani z zawodu?"),
+        ("voc-pensja.mp3", VOICE_FEMALE, "pensja. W tej firmie jest wysoka pensja."),
+        ("voc-dywan.mp3", VOICE_MALE, "dywan. Na podłodze w pokoju leży miękki dywan."),
+        ("voc-kanapa.mp3", VOICE_FEMALE, "kanapa. W salonie stoi wygodna kanapa."),
+        (
+            "voc-interesowac.mp3",
+            VOICE_MALE,
+            "interesować się. Interesuję się sportem i muzyką.",
+        ),
+        (
+            "voc-zajmowac.mp3",
+            VOICE_FEMALE,
+            "zajmować się. Czym się Pani zajmuje zawodowo?",
+        ),
+    ],
+}
 
 
 async def generate_all() -> None:
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
-    print(f"Генерация {len(AUDIO_ITEMS)} польских аудиофайлов в {OUTPUT_DIR}...")
-    for filename, voice, text in AUDIO_ITEMS:
-        filepath = os.path.join(OUTPUT_DIR, filename)
-        if os.path.exists(filepath) and os.path.getsize(filepath) > 500:
-            print(f"  [OK] {filename} уже существует")
-            continue
-        communicate = edge_tts.Communicate(text=text, voice=voice, rate="-5%")
-        await communicate.save(filepath)
-        print(f"  [+] Создан {filename} ({voice})")
-    print("Готово! Все аудиофайлы Модуля 1 созданы.")
+    for mod_id, items in AUDIO_MODULES.items():
+        mod_dir = os.path.join(PUBLIC_AUDIO_DIR, mod_id)
+        os.makedirs(mod_dir, exist_ok=True)
+        print(f"Проверка и генерация {len(items)} аудиофайлов для {mod_id}...")
+        for filename, voice, text in items:
+            filepath = os.path.join(mod_dir, filename)
+            if os.path.exists(filepath) and os.path.getsize(filepath) > 1000:
+                print(f"  [OK] {mod_id}/{filename}")
+                continue
+            communicate = edge_tts.Communicate(text=text, voice=voice, rate="-5%")
+            await communicate.save(filepath)
+            print(f"  [+] Создан {mod_id}/{filename} ({voice})")
+    print("Готово! Все аудиофайлы всех модулей созданы.")
 
 
 if __name__ == "__main__":

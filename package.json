@@ -10,6 +10,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "validate:content": "node --import tsx scripts/validate-content.ts",
+    "qa": "npm run validate:content && npm test",
     "generate:audio": "python scripts/generate_audio.py"
   },
   "dependencies": {

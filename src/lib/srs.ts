@@ -3,6 +3,7 @@ export type SrsStage = 'recognition' | 'production';
 export type SrsRating = 'again' | 'hard' | 'good' | 'easy';
 
 export interface SrsCardState {
+  profileId?: string;
   vocabId: string;
   moduleId: string;
   stage: SrsStage;
@@ -16,15 +17,30 @@ export interface SrsCardState {
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-export function createInitialSrsCard(vocabId: string, moduleId: string, now = Date.now()): SrsCardState {
+export function createInitialSrsCard(
+  vocabId: string,
+  moduleId: string,
+  profileIdOrNow?: string | number,
+  now = Date.now()
+): SrsCardState {
+  let profileId = 'default';
+  let createdNow = now;
+
+  if (typeof profileIdOrNow === 'number') {
+    createdNow = profileIdOrNow;
+  } else if (typeof profileIdOrNow === 'string') {
+    profileId = profileIdOrNow;
+  }
+
   return {
+    profileId,
     vocabId,
     moduleId,
     stage: 'recognition', // Сначала Ступень 1: узнавание, затем Ступень 2: морфологический ввод в контексте
     intervalDays: 0,
     easeFactor: 2.5,
     repetitions: 0,
-    dueTimestamp: now,
+    dueTimestamp: createdNow,
     lapses: 0,
   };
 }

@@ -10,7 +10,7 @@ import {
   Sparkles,
   MessageSquare,
 } from 'lucide-react';
-import { MODULE_A0_01 } from '@/content/modules/mod-a0-01';
+import { getModuleById } from '@/content/modules';
 import { ExerciseCard } from './ExerciseCard';
 import { playPolishAudio } from '@/lib/audio';
 import { useAppStore } from '@/store/useAppStore';
@@ -21,8 +21,9 @@ interface LessonRunnerProps {
 }
 
 export function LessonRunner({ lessonId, onOpenGrammar }: LessonRunnerProps) {
-  const { setView, markItemCompleted } = useAppStore();
-  const lesson = MODULE_A0_01.lessons.find((l) => l.id === lessonId) ?? MODULE_A0_01.lessons[0];
+  const { selectedModuleId, setView, markItemCompleted } = useAppStore();
+  const activeModule = getModuleById(selectedModuleId);
+  const lesson = activeModule.lessons.find((l) => l.id === lessonId) ?? activeModule.lessons[0];
 
   const [phase, setPhase] = useState<'theory' | 'exercises' | 'completed'>('theory');
   const [currentExIndex, setCurrentExIndex] = useState(0);

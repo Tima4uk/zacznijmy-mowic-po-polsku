@@ -2,14 +2,15 @@
 
 import React, { useState } from 'react';
 import { ArrowLeft, MapPin, Volume2, Award } from 'lucide-react';
-import { MODULE_A0_01 } from '@/content/modules/mod-a0-01';
+import { getModuleById } from '@/content/modules';
 import { ExerciseCard } from './ExerciseCard';
 import { playPolishAudio } from '@/lib/audio';
 import { useAppStore } from '@/store/useAppStore';
 
 export function QuestRunner() {
-  const { setView, markItemCompleted } = useAppStore();
-  const quest = MODULE_A0_01.quest;
+  const { selectedModuleId, setView, markItemCompleted } = useAppStore();
+  const activeModule = getModuleById(selectedModuleId);
+  const quest = activeModule.quest;
 
   const [stepIdx, setStepIdx] = useState(0);
   const [firstTryCount, setFirstTryCount] = useState(0);

@@ -2,7 +2,8 @@
 
 import React, { useEffect, useId, useRef } from 'react';
 import { X, ShieldAlert, CheckCircle2, Sparkles } from 'lucide-react';
-import { MODULE_A0_01 } from '@/content/modules/mod-a0-01';
+import { getModuleById } from '@/content/modules';
+import { useAppStore } from '@/store/useAppStore';
 
 interface GrammarDialogProps {
   isOpen: boolean;
@@ -14,6 +15,8 @@ interface GrammarDialogProps {
  * Использует нативный <dialog closedby="any"> с fallback-обработчиком клика по backdrop.
  */
 export function GrammarDialog({ isOpen, onClose }: GrammarDialogProps) {
+  const { selectedModuleId } = useAppStore();
+  const activeModule = getModuleById(selectedModuleId);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const titleId = useId();
 
@@ -68,7 +71,7 @@ export function GrammarDialog({ isOpen, onClose }: GrammarDialogProps) {
         <div className="flex items-center gap-2.5">
           <Sparkles className="h-5 w-5 text-red-600" aria-hidden="true" />
           <h2 id={titleId} className="text-lg font-bold text-slate-900">
-            Шпаргалка Модуля 1 и Клиника ошибок белоруса
+            Шпаргалка Модуля {activeModule.releaseNumber} ({activeModule.level}) и Клиника ошибок
           </h2>
         </div>
         <form method="dialog">
@@ -148,9 +151,9 @@ export function GrammarDialog({ isOpen, onClose }: GrammarDialogProps) {
             Клиника типичных ошибок (Pułapki Językowe)
           </h3>
           <div className="space-y-3">
-            {MODULE_A0_01.errorClinic.map((item) => (
+            {activeModule.errorClinic.map((item, idx) => (
               <article
-                key={item.tag}
+                key={`${item.tag}-${idx}`}
                 className="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-2"
               >
                 <h4 className="font-semibold text-slate-900">{item.title}</h4>

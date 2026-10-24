@@ -2,13 +2,14 @@
 
 import React, { useState } from 'react';
 import { ArrowLeft, Award, ShieldCheck, RotateCcw } from 'lucide-react';
-import { MODULE_A0_01 } from '@/content/modules/mod-a0-01';
+import { getModuleById } from '@/content/modules';
 import { ExerciseCard } from './ExerciseCard';
 import { useAppStore } from '@/store/useAppStore';
 
 export function FinalTestRunner() {
-  const { setView, markItemCompleted } = useAppStore();
-  const test = MODULE_A0_01.finalTest;
+  const { selectedModuleId, setView, markItemCompleted } = useAppStore();
+  const activeModule = getModuleById(selectedModuleId);
+  const test = activeModule.finalTest;
 
   const [exIndex, setExIndex] = useState(0);
   const [correctFirstTry, setCorrectFirstTry] = useState(0);

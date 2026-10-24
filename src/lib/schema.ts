@@ -179,3 +179,21 @@ export const CourseModuleSchema = z.object({
     })
   ),
 });
+
+export const UserProfileSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().trim().min(1, 'Имя не должно быть пустым').max(30, 'Имя слишком длинное'),
+  avatar: z.string().min(1),
+  color: z.string().min(1),
+  createdAt: z.number().int().positive(),
+  streakDays: z.number().int().nonnegative(),
+  lastActiveDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  totalExercisesSolved: z.number().int().nonnegative(),
+  correctFirstTryCount: z.number().int().nonnegative(),
+});
+
+export const NewProfileInputSchema = z.object({
+  name: z.string().trim().min(1, 'Введите имя профиля').max(30, 'Имя слишком длинное (до 30 символов)'),
+  avatar: z.string().min(1),
+  color: z.string().min(1),
+});

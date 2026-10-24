@@ -9,7 +9,7 @@ import {
   AlertTriangle,
   Sparkles,
 } from 'lucide-react';
-import { MODULE_A0_01 } from '@/content/modules/mod-a0-01';
+import { getModuleById } from '@/content/modules';
 import { useAppStore } from '@/store/useAppStore';
 import { playPolishAudio } from '@/lib/audio';
 import { validatePolishAnswer } from '@/lib/validator';
@@ -18,9 +18,10 @@ import { SrsRating } from '@/lib/srs';
 const POLISH_KEYS = ['ą', 'ć', 'ę', 'ł', 'ń', 'ó', 'ś', 'ź', 'ż'];
 
 export function SrsTrainer() {
-  const { setView, srsCards, reviewSrsCard } = useAppStore();
+  const { selectedModuleId, setView, srsCards, reviewSrsCard } = useAppStore();
+  const activeModule = getModuleById(selectedModuleId);
 
-  const vocabList = MODULE_A0_01.vocabulary;
+  const vocabList = activeModule.vocabulary;
   const [cardIndex, setCardIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [morphInput, setMorphInput] = useState('');

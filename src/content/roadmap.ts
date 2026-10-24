@@ -31,7 +31,7 @@ export const COURSE_ROADMAP: RoadmapMilestone[] = [
     titleRu: 'Кто ты и откуда? Настоящее время и Творительный падеж',
     grammarFocus: 'Спряжения -am/-asz, -ę/-esz (-ować -> -uję), Narzędnik профессий и национальностей',
     realLifeScenario: 'Знакомство с соседями по дому (klatka schodowa) и коллегами',
-    status: 'upcoming',
+    status: 'available',
   },
   {
     releaseNumber: 3,
