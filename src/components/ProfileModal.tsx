@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Users,
   UserPlus,
@@ -31,8 +31,15 @@ export function ProfileModal() {
   const [avatar, setAvatar] = useState('🧑‍🎓');
   const [color, setColor] = useState('indigo');
   const [errorMsg, setErrorMsg] = useState('');
+  const dialogRef = useRef<HTMLDialogElement>(null);
 
-  if (!isProfileModalOpen) return null;
+  // Синхронизируем нативный <dialog> с состоянием стора (showModal делает фон inert и ловит Esc/жест «назад»)
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    if (isProfileModalOpen && !dialog.open) dialog.showModal();
+    if (!isProfileModalOpen && dialog.open) dialog.close();
+  }, [isProfileModalOpen]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,8 +71,13 @@ export function ProfileModal() {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-100 flex flex-col max-h-[90vh]">
+    <dialog
+      ref={dialogRef}
+      onClose={() => setProfileModalOpen(false)}
+      aria-labelledby="profile-modal-title"
+      className="m-auto w-full max-w-lg bg-transparent p-4 backdrop:bg-slate-900/60 backdrop:backdrop-blur-sm"
+    >
+      <div className="bg-white rounded-3xl shadow-2xl w-full overflow-hidden border border-slate-100 flex flex-col max-h-[90vh]">
         {/* Шапка модального окна */}
         <div className="p-6 bg-gradient-to-r from-slate-900 to-indigo-950 text-white flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -73,7 +85,7 @@ export function ProfileModal() {
               <Users className="w-5 h-5 text-indigo-300" />
             </div>
             <div>
-              <h2 className="text-xl font-bold">Профили обучения</h2>
+              <h2 id="profile-modal-title" className="text-xl font-bold">Профили обучения</h2>
               <p className="text-xs text-indigo-200">
                 Занимайтесь всей семьёй или с друзьями с раздельным прогрессом
               </p>
@@ -309,6 +321,6 @@ export function ProfileModal() {
           )}
         </div>
       </div>
-    </div>
+    </dialog>
   );
 }

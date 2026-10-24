@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Download, Smartphone, X, Check } from 'lucide-react';
 
 interface BeforeInstallPromptEvent extends Event {
@@ -11,8 +11,11 @@ interface BeforeInstallPromptEvent extends Event {
 export function InstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isStandalone, setIsStandalone] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const guideDialogRef = useRef<HTMLDialogElement>(null);
   const [installedSuccessfully, setInstalledSuccessfully] = useState(false);
+
+  const openGuide = () => guideDialogRef.current?.showModal();
+  const closeGuide = () => guideDialogRef.current?.close();
 
   useEffect(() => {
     // 1. Check if running in standalone mode (already installed)
@@ -24,11 +27,20 @@ export function InstallPrompt() {
 
     setIsStandalone(checkStandalone());
 
-    // 2. Register Service Worker
-    if ('serviceWorker' in navigator) {
+    // 2. Register Service Worker (only in production: dev chunks are unhashed and would be served stale)
+    if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
       const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
       navigator.serviceWorker
         .register(`${basePath}/sw.js`, { scope: `${basePath}/` })
+        .then(() => navigator.serviceWorker.ready)
+        .then((registration) => {
+          // Hand over chunks loaded before the SW took control, so offline works after the first visit
+          const urls = performance
+            .getEntriesByType('resource')
+            .map((entry) => entry.name)
+            .filter((url) => url.startsWith(location.origin) && url.includes('/_next/static/'));
+          registration.active?.postMessage({ type: 'CACHE_URLS', urls });
+        })
         .catch((err) => {
           console.warn('Service Worker registration skipped:', err);
         });
@@ -67,11 +79,11 @@ export function InstallPrompt() {
         setDeferredPrompt(null);
       } catch (err) {
         console.warn('Install prompt error:', err);
-        setIsModalOpen(true);
+        openGuide();
       }
     } else {
       // If deferredPrompt is not yet available or on iOS/Firefox, show guide
-      setIsModalOpen(true);
+      openGuide();
     }
   };
 
@@ -93,17 +105,20 @@ export function InstallPrompt() {
         <span className="sm:hidden">Скачать</span>
       </button>
 
-      {/* Instructions Modal if prompt is manual */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
-          <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-xl border border-slate-200 space-y-4">
+      {/* Instructions dialog if prompt is manual (native <dialog>: Esc/back gesture, inert background) */}
+      <dialog
+        ref={guideDialogRef}
+        aria-labelledby="install-guide-title"
+        className="m-auto w-full max-w-md rounded-2xl bg-white p-6 shadow-xl border border-slate-200 backdrop:bg-slate-900/60 backdrop:backdrop-blur-xs"
+      >
+          <div className="space-y-4">
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-2.5">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-600 font-extrabold text-white">
-                  <Smartphone className="h-5 w-5" />
+                  <Smartphone className="h-5 w-5" aria-hidden="true" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-slate-900">
+                  <h3 id="install-guide-title" className="text-base font-bold text-slate-900">
                     Установка на телефон
                   </h3>
                   <p className="text-xs text-slate-500">
@@ -113,10 +128,11 @@ export function InstallPrompt() {
               </div>
               <button
                 type="button"
-                onClick={() => setIsModalOpen(false)}
+                onClick={closeGuide}
+                aria-label="Закрыть"
                 className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
               >
-                <X className="h-5 w-5" />
+                <X className="h-5 w-5" aria-hidden="true" />
               </button>
             </div>
 
@@ -145,14 +161,13 @@ export function InstallPrompt() {
 
             <button
               type="button"
-              onClick={() => setIsModalOpen(false)}
+              onClick={closeGuide}
               className="w-full rounded-xl bg-red-600 py-2.5 text-xs font-bold text-white hover:bg-red-700 transition-colors shadow-xs"
             >
               Понятно
             </button>
           </div>
-        </div>
-      )}
+      </dialog>
 
       {installedSuccessfully && (
         <div className="fixed bottom-4 right-4 z-50 flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-xs font-bold text-white shadow-lg animate-bounce">
