@@ -3,7 +3,7 @@ export type SrsStage = 'recognition' | 'production';
 export type SrsRating = 'again' | 'hard' | 'good' | 'easy';
 
 export interface SrsCardState {
-  profileId?: string;
+  profileId: string;
   vocabId: string;
   moduleId: string;
   stage: SrsStage;
@@ -20,18 +20,9 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 export function createInitialSrsCard(
   vocabId: string,
   moduleId: string,
-  profileIdOrNow?: string | number,
+  profileId: string,
   now = Date.now()
 ): SrsCardState {
-  let profileId = 'default';
-  let createdNow = now;
-
-  if (typeof profileIdOrNow === 'number') {
-    createdNow = profileIdOrNow;
-  } else if (typeof profileIdOrNow === 'string') {
-    profileId = profileIdOrNow;
-  }
-
   return {
     profileId,
     vocabId,
@@ -40,7 +31,7 @@ export function createInitialSrsCard(
     intervalDays: 0,
     easeFactor: 2.5,
     repetitions: 0,
-    dueTimestamp: createdNow,
+    dueTimestamp: now,
     lapses: 0,
   };
 }

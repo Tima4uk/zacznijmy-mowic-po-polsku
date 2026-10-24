@@ -3,6 +3,9 @@ import { SrsCardState } from './srs';
 import { InterferenceTag } from '@/types/curriculum';
 import { UserProfile } from '@/types/profile';
 
+/** Профиль, к которому привязываются данные, созданные до появления мультипрофильности. */
+export const DEFAULT_PROFILE_ID = 'prof-default';
+
 export interface CompletedItemRecord {
   profileId: string;
   itemId: string; // lessonId, questId, or testId
@@ -47,21 +50,54 @@ class PolishAppDatabase extends Dexie {
       userMeta: 'key',
     });
 
-    // Версия 2: сброс таблиц со старыми одинарными primary key
-    this.version(2).stores({
-      profiles: 'id, name, createdAt',
-      completedItems: null,
-      srsCards: null,
-    });
+    // Версия 2: Dexie не умеет менять primary key, поэтому старые таблицы удаляются,
+    // а их данные переносятся во временные таблицы с привязкой к профилю по умолчанию
+    // (удалённые таблицы ещё доступны внутри upgrade и удаляются после него).
+    this.version(2)
+      .stores({
+        profiles: 'id, name, createdAt',
+        completedItems: null,
+        srsCards: null,
+        _migCompletedItems: '++_id',
+        _migSrsCards: '++_id',
+      })
+      .upgrade(async (tx) => {
+        const [oldCompleted, oldCards] = await Promise.all([
+          tx.table('completedItems').toArray(),
+          tx.table('srsCards').toArray(),
+        ]);
+        await tx.table('_migCompletedItems').bulkAdd(
+          oldCompleted.map((r) => ({ ...r, profileId: DEFAULT_PROFILE_ID }))
+        );
+        await tx.table('_migSrsCards').bulkAdd(
+          oldCards.map((r) => ({ ...r, profileId: DEFAULT_PROFILE_ID }))
+        );
+      });
 
     // Версия 3: мультипрофильная архитектура с составными ключами [profileId+itemId] и [profileId+vocabId]
-    this.version(3).stores({
-      profiles: 'id, name, createdAt',
-      completedItems: '[profileId+itemId], profileId, itemId, moduleId, itemType',
-      srsCards: '[profileId+vocabId], profileId, vocabId, moduleId, stage, dueTimestamp',
-      interferenceLogs: '++id, profileId, tag, exerciseId, timestamp',
-      userMeta: 'key',
-    });
+    this.version(3)
+      .stores({
+        profiles: 'id, name, createdAt',
+        completedItems: '[profileId+itemId], profileId, itemId, moduleId, itemType',
+        srsCards: '[profileId+vocabId], profileId, vocabId, moduleId, stage, dueTimestamp',
+        interferenceLogs: '++id, profileId, tag, exerciseId, timestamp',
+        userMeta: 'key',
+        _migCompletedItems: null,
+        _migSrsCards: null,
+      })
+      .upgrade(async (tx) => {
+        const stripTmpKey = <T extends { _id?: number }>({ _id, ...rest }: T) => rest;
+        const [migCompleted, migCards] = await Promise.all([
+          tx.table('_migCompletedItems').toArray(),
+          tx.table('_migSrsCards').toArray(),
+        ]);
+        await tx.table('completedItems').bulkPut(migCompleted.map(stripTmpKey));
+        await tx.table('srsCards').bulkPut(migCards.map(stripTmpKey));
+        await tx
+          .table('interferenceLogs')
+          .filter((log) => !log.profileId)
+          .modify({ profileId: DEFAULT_PROFILE_ID });
+      });
   }
 }
 

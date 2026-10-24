@@ -1,7 +1,7 @@
 'use client';
 
 import { create } from 'zustand';
-import { db, CompletedItemRecord, InterferenceErrorLog } from '@/lib/db';
+import { db, CompletedItemRecord, InterferenceErrorLog, DEFAULT_PROFILE_ID } from '@/lib/db';
 import { createInitialSrsCard, scheduleNextReview, SrsCardState, SrsRating } from '@/lib/srs';
 import { ALL_MODULES } from '@/content/modules';
 import { InterferenceTag } from '@/types/curriculum';
@@ -93,7 +93,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     if (profileList.length === 0) {
       const legacyMeta = await db.userMeta.get('profile');
       const defaultProfile: UserProfile = {
-        id: 'prof-default',
+        id: DEFAULT_PROFILE_ID,
         name: 'Ученик',
         avatar: '🦉',
         color: 'indigo',
@@ -113,86 +113,13 @@ export const useAppStore = create<AppState>((set, get) => ({
         ? localStorage.getItem(STORAGE_ACTIVE_PROFILE_KEY)
         : null;
 
-    let activeProfile =
+    const activeProfile =
       profileList.find((p) => p.id === savedProfileId) || profileList[0];
 
-    // Проверяем стрик активного профиля
-    const today = getTodayIso();
-    let streakDays = activeProfile.streakDays;
-    if (activeProfile.lastActiveDate !== today) {
-      const prevDate = new Date(activeProfile.lastActiveDate);
-      const currDate = new Date(today);
-      const diffDays = Math.round(
-        (currDate.getTime() - prevDate.getTime()) / (1000 * 60 * 60 * 24)
-      );
-      if (diffDays === 1) {
-        streakDays += 1;
-      } else if (diffDays > 1) {
-        streakDays = 1;
-      }
-      activeProfile = {
-        ...activeProfile,
-        streakDays,
-        lastActiveDate: today,
-      };
-      await db.profiles.put(activeProfile);
-      profileList = profileList.map((p) =>
-        p.id === activeProfile.id ? activeProfile : p
-      );
-    }
-
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(STORAGE_ACTIVE_PROFILE_KEY, activeProfile.id);
-    }
-
-    // Загружаем данные именно для активного профиля
-    const [completedList, existingCards, logs] = await Promise.all([
-      db.completedItems.where('profileId').equals(activeProfile.id).toArray(),
-      db.srsCards.where('profileId').equals(activeProfile.id).toArray(),
-      db.interferenceLogs
-        .where('profileId')
-        .equals(activeProfile.id)
-        .reverse()
-        .limit(50)
-        .toArray(),
-    ]);
-
-    const completedMap: Record<string, CompletedItemRecord> = {};
-    for (const item of completedList) {
-      completedMap[item.itemId] = item;
-    }
-
-    const srsMap: Record<string, SrsCardState> = {};
-    for (const card of existingCards) {
-      srsMap[card.vocabId] = card;
-    }
-
-    // Инициализируем карточки модулей для этого профиля, если их ещё нет
-    const newCardsToInsert: SrsCardState[] = [];
-    for (const mod of ALL_MODULES) {
-      for (const vocab of mod.vocabulary) {
-        if (!srsMap[vocab.id]) {
-          const card = createInitialSrsCard(vocab.id, mod.id, activeProfile.id);
-          srsMap[vocab.id] = card;
-          newCardsToInsert.push(card);
-        }
-      }
-    }
-    if (newCardsToInsert.length > 0) {
-      await db.srsCards.bulkPut(newCardsToInsert);
-    }
-
-    set({
-      isHydrated: true,
-      profiles: profileList,
-      currentProfile: activeProfile,
-      completedItems: completedMap,
-      srsCards: srsMap,
-      interferenceLogs: logs,
-      streakDays: activeProfile.streakDays,
-      totalExercisesSolved: activeProfile.totalExercisesSolved,
-      correctFirstTryCount: activeProfile.correctFirstTryCount,
-    });
+    // switchProfile актуализирует стрик и загружает данные активного профиля
+    set({ profiles: profileList });
+    await get().switchProfile(activeProfile.id);
+    set({ isHydrated: true });
   },
 
   createProfile: async (input) => {
@@ -425,14 +352,10 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   reviewSrsCard: async (vocabId, rating) => {
-    const { currentProfile, srsCards } = get();
-    const current = srsCards[vocabId];
+    const current = get().srsCards[vocabId];
     if (!current) return;
 
     const updated = scheduleNextReview(current, rating);
-    if (currentProfile) {
-      updated.profileId = currentProfile.id;
-    }
 
     if (db) {
       await db.srsCards.put(updated);
