@@ -26,6 +26,7 @@ import { FinalTestRunner } from '@/components/FinalTestRunner';
 import { SrsTrainer } from '@/components/SrsTrainer';
 import { GrammarDialog } from '@/components/GrammarDialog';
 import { ProfileModal } from '@/components/ProfileModal';
+import { InstallPrompt } from '@/components/InstallPrompt';
 import { playPolishAudio } from '@/lib/audio';
 
 export default function HomePage() {
@@ -127,6 +128,8 @@ export default function HomePage() {
               <span className="hidden sm:inline">Шпаргалка и кальки</span>
               <span className="sm:hidden">Правила</span>
             </button>
+
+            <InstallPrompt />
           </div>
         </div>
       </header>
