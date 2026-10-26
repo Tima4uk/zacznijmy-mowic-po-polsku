@@ -37,6 +37,33 @@ export function stripPolishDiacritics(input: string): string {
 }
 
 /**
+ * Извлекает канонические варианты написания словарного слова для режима правописания и аудиодиктанта.
+ * Например:
+ * - "pracować (pracuję, pracuje)" -> ["pracować", "pracować (pracuję, pracuje)"]
+ * - "Białorusin / Białorusinka" -> ["Białorusin", "Białorusinka", "Białorusin / Białorusinka"]
+ */
+export function extractSpellingTargets(plField: string): string[] {
+  const targets = new Set<string>();
+  const trimmed = plField.trim();
+  if (!trimmed) return [];
+
+  // Убираем грамматические пометки в скобках: "pracować (pracuję, pracuje)" -> "pracować"
+  const withoutParens = trimmed.replace(/\s*\([^)]*\)/g, '').trim();
+  if (withoutParens) {
+    targets.add(withoutParens);
+    // Если есть варианты через слэш: "Białorusin / Białorusinka" -> можно ввести любое из двух или оба
+    if (withoutParens.includes('/')) {
+      for (const part of withoutParens.split('/')) {
+        const cleanPart = part.trim();
+        if (cleanPart) targets.add(cleanPart);
+      }
+    }
+  }
+  targets.add(trimmed);
+  return Array.from(targets);
+}
+
+/**
  * Проверяет ответ пользователя на польском языке:
  * 1. Exact Match (без учёта регистра и пунктуации) -> зачёт без предупреждений.
  * 2. Diacritic Mismatch (совпадает после замены ą->a, ł->l и т.д.) -> зачёт (на A0/A1) с мягким предупреждением.

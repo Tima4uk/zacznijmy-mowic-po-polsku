@@ -1,18 +1,27 @@
 'use client';
 
 import { create } from 'zustand';
-import { db, CompletedItemRecord, InterferenceErrorLog, DEFAULT_PROFILE_ID } from '@/lib/db';
+import {
+  db,
+  CompletedItemRecord,
+  InterferenceErrorLog,
+  CustomWordRecord,
+  DEFAULT_PROFILE_ID,
+} from '@/lib/db';
 import { createInitialSrsCard, scheduleNextReview, SrsCardState, SrsRating } from '@/lib/srs';
 import { ALL_MODULES } from '@/content/modules';
+import { getAllPackWords } from '@/content/vocab-packs';
 import { InterferenceTag } from '@/types/curriculum';
 import { UserProfile, NewProfileInput } from '@/types/profile';
+
+export type VocabDrillMode = 'dictation' | 'spelling' | 'context';
 
 export type ActiveView =
   | { mode: 'dashboard' }
   | { mode: 'lesson'; lessonId: string }
   | { mode: 'quest' }
   | { mode: 'final_test' }
-  | { mode: 'srs_session' };
+  | { mode: 'srs_session'; drillMode?: VocabDrillMode; packId?: string };
 
 interface AppState {
   isHydrated: boolean;
@@ -26,6 +35,7 @@ interface AppState {
 
   completedItems: Record<string, CompletedItemRecord>;
   srsCards: Record<string, SrsCardState>;
+  customWords: CustomWordRecord[];
   interferenceLogs: InterferenceErrorLog[];
   streakDays: number;
   totalExercisesSolved: number;
@@ -40,6 +50,15 @@ interface AppState {
   switchProfile: (profileId: string) => Promise<void>;
   updateProfile: (profileId: string, updates: Partial<NewProfileInput>) => Promise<void>;
   deleteProfile: (profileId: string) => Promise<void>;
+
+  addCustomWord: (input: {
+    pl: string;
+    ru: string;
+    pronunciationHint?: string;
+    examplePl?: string;
+    exampleRu?: string;
+  }) => Promise<void>;
+  deleteCustomWord: (wordId: string) => Promise<void>;
 
   markItemCompleted: (
     itemId: string,
@@ -72,6 +91,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   completedItems: {},
   srsCards: {},
+  customWords: [],
   interferenceLogs: [],
   streakDays: 1,
   totalExercisesSolved: 0,
@@ -107,7 +127,6 @@ export const useAppStore = create<AppState>((set, get) => ({
       profileList = [defaultProfile];
     }
 
-    // Определяем активный профиль из localStorage или берём первый
     const savedProfileId =
       typeof window !== 'undefined'
         ? localStorage.getItem(STORAGE_ACTIVE_PROFILE_KEY)
@@ -116,7 +135,6 @@ export const useAppStore = create<AppState>((set, get) => ({
     const activeProfile =
       profileList.find((p) => p.id === savedProfileId) || profileList[0];
 
-    // switchProfile актуализирует стрик и загружает данные активного профиля
     set({ profiles: profileList });
     await get().switchProfile(activeProfile.id);
     set({ isHydrated: true });
@@ -142,7 +160,6 @@ export const useAppStore = create<AppState>((set, get) => ({
     const nextProfiles = [...get().profiles, newProfile];
     set({ profiles: nextProfiles });
 
-    // Автоматически переключаемся на созданный профиль
     await get().switchProfile(newProfile.id);
     return newProfile.id;
   },
@@ -156,7 +173,6 @@ export const useAppStore = create<AppState>((set, get) => ({
       localStorage.setItem(STORAGE_ACTIVE_PROFILE_KEY, target.id);
     }
 
-    // Актуализируем стрик при переключении
     const today = getTodayIso();
     let streakDays = target.streakDays;
     if (target.lastActiveDate !== today) {
@@ -176,12 +192,13 @@ export const useAppStore = create<AppState>((set, get) => ({
       }
     }
 
-    let completedMap: Record<string, CompletedItemRecord> = {};
-    let srsMap: Record<string, SrsCardState> = {};
+    const completedMap: Record<string, CompletedItemRecord> = {};
+    const srsMap: Record<string, SrsCardState> = {};
     let logs: InterferenceErrorLog[] = [];
+    let customWordsList: CustomWordRecord[] = [];
 
     if (db) {
-      const [completedList, existingCards, logsList] = await Promise.all([
+      const [completedList, existingCards, logsList, userWords] = await Promise.all([
         db.completedItems.where('profileId').equals(target.id).toArray(),
         db.srsCards.where('profileId').equals(target.id).toArray(),
         db.interferenceLogs
@@ -190,6 +207,7 @@ export const useAppStore = create<AppState>((set, get) => ({
           .reverse()
           .limit(50)
           .toArray(),
+        db.customWords.where('profileId').equals(target.id).reverse().toArray(),
       ]);
 
       for (const item of completedList) {
@@ -199,8 +217,9 @@ export const useAppStore = create<AppState>((set, get) => ({
         srsMap[card.vocabId] = card;
       }
       logs = logsList;
+      customWordsList = userWords;
 
-      // Инициализируем карточки SRS для нового профиля
+      // Инициализируем карточки SRS для всех модулей и тематических наборов
       const newCardsToInsert: SrsCardState[] = [];
       for (const mod of ALL_MODULES) {
         for (const vocab of mod.vocabulary) {
@@ -211,6 +230,21 @@ export const useAppStore = create<AppState>((set, get) => ({
           }
         }
       }
+      for (const packWord of getAllPackWords()) {
+        if (!srsMap[packWord.id]) {
+          const card = createInitialSrsCard(packWord.id, 'vocab-packs', target.id);
+          srsMap[packWord.id] = card;
+          newCardsToInsert.push(card);
+        }
+      }
+      for (const cw of customWordsList) {
+        if (!srsMap[cw.id]) {
+          const card = createInitialSrsCard(cw.id, 'custom-words', target.id);
+          srsMap[cw.id] = card;
+          newCardsToInsert.push(card);
+        }
+      }
+
       if (newCardsToInsert.length > 0) {
         await db.srsCards.bulkPut(newCardsToInsert);
       }
@@ -222,6 +256,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       activeView: { mode: 'dashboard' },
       completedItems: completedMap,
       srsCards: srsMap,
+      customWords: customWordsList,
       interferenceLogs: logs,
       streakDays: target.streakDays,
       totalExercisesSolved: target.totalExercisesSolved,
@@ -255,7 +290,6 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   deleteProfile: async (profileId: string) => {
     const { profiles, currentProfile } = get();
-    // Нельзя удалить последний оставшийся профиль
     if (profiles.length <= 1) return;
 
     if (db) {
@@ -264,18 +298,76 @@ export const useAppStore = create<AppState>((set, get) => ({
         db.completedItems.where('profileId').equals(profileId).delete(),
         db.srsCards.where('profileId').equals(profileId).delete(),
         db.interferenceLogs.where('profileId').equals(profileId).delete(),
+        db.customWords.where('profileId').equals(profileId).delete(),
       ]);
     }
 
     const remainingProfiles = profiles.filter((p) => p.id !== profileId);
 
-    // Если удалили активный профиль, переключаемся на первый оставшийся
     if (currentProfile?.id === profileId) {
       set({ profiles: remainingProfiles });
       await get().switchProfile(remainingProfiles[0].id);
     } else {
       set({ profiles: remainingProfiles });
     }
+  },
+
+  addCustomWord: async (input) => {
+    const { currentProfile } = get();
+    if (!currentProfile) return;
+
+    const pl = input.pl.trim();
+    const ru = input.ru.trim();
+    if (!pl || !ru) return;
+
+    const newWord: CustomWordRecord = {
+      id: `cw-${Date.now()}`,
+      profileId: currentProfile.id,
+      pl,
+      ru,
+      pronunciationHint: input.pronunciationHint?.trim() || undefined,
+      examplePl: input.examplePl?.trim() || undefined,
+      exampleRu: input.exampleRu?.trim() || undefined,
+      createdAt: Date.now(),
+    };
+
+    const newCard = createInitialSrsCard(newWord.id, 'custom-words', currentProfile.id);
+
+    if (db) {
+      await Promise.all([
+        db.customWords.put(newWord),
+        db.srsCards.put(newCard),
+      ]);
+    }
+
+    set((state) => ({
+      customWords: [newWord, ...state.customWords],
+      srsCards: {
+        ...state.srsCards,
+        [newWord.id]: newCard,
+      },
+    }));
+  },
+
+  deleteCustomWord: async (wordId) => {
+    const { currentProfile } = get();
+    if (!currentProfile) return;
+
+    if (db) {
+      await Promise.all([
+        db.customWords.delete(wordId),
+        db.srsCards.where({ profileId: currentProfile.id, vocabId: wordId }).delete(),
+      ]);
+    }
+
+    set((state) => {
+      const nextCards = { ...state.srsCards };
+      delete nextCards[wordId];
+      return {
+        customWords: state.customWords.filter((w) => w.id !== wordId),
+        srsCards: nextCards,
+      };
+    });
   },
 
   markItemCompleted: async (itemId, itemType, scorePercent) => {

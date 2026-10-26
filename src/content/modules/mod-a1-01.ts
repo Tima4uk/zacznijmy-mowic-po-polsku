@@ -476,6 +476,37 @@ export const MODULE_A1_01: CourseModule = {
           ],
         },
         {
+          id: 'ex-a1-01-3-1b',
+          type: 'multiple_choice',
+          skill: 'reading',
+          difficulty: 1,
+          promptRu:
+            'Прочитайте объявление в подъезде (Tablica ogłoszeń): «Szanowni Mieszkańcy! Administrator budynku przyjmuje w środy od 10:00 do 14:00 w pokoju na parterze. Nowy konserwator, pan Piotr, jest elektrykiem i hydraulikiem». Кем работает пан Пётр?',
+          grammarTag: 'Reading: Ogłoszenie na klatce schodowej',
+          explanationRu:
+            'Pan Piotr jest elektrykiem i hydraulikiem — пан Пётр работает электриком и сантехником (формы Narzędnik от elektryk и hydraulik).',
+          options: [
+            {
+              id: 'opt-r1',
+              text: 'Он электрик и сантехник.',
+              isCorrect: true,
+              feedbackRu: 'Верно! Elektrykiem i hydraulikiem — Творительный падеж (Narzędnik).',
+            },
+            {
+              id: 'opt-r2',
+              text: 'Он программист и бухгалтер.',
+              isCorrect: false,
+              feedbackRu: 'Программист — programista, бухгалтер — księgowy.',
+            },
+            {
+              id: 'opt-r3',
+              text: 'Он врач и учитель.',
+              isCorrect: false,
+              feedbackRu: 'Врач — lekarz, учитель — nauczyciel.',
+            },
+          ],
+        },
+        {
           id: 'ex-a1-01-3-2',
           type: 'cloze_input',
           skill: 'grammar',

@@ -1,8 +1,9 @@
 import fs from 'fs';
 import path from 'path';
-import { CourseModuleSchema } from '../src/lib/schema';
+import { CourseModuleSchema, VocabItemSchema } from '../src/lib/schema';
 import { ALL_MODULES } from '../src/content/modules';
-import { validatePolishAnswer } from '../src/lib/validator';
+import { THEMATIC_VOCAB_PACKS } from '../src/content/vocab-packs';
+import { validatePolishAnswer, extractSpellingTargets } from '../src/lib/validator';
 
 const PUBLIC_DIR = path.resolve(__dirname, '../public');
 
@@ -113,9 +114,42 @@ for (const mod of ALL_MODULES) {
   }
 }
 
+// 4. Проверка тематических пакетов расширения словарного запаса
+console.log(`📚 Проверка тематических пакетов расширения словарного запаса (${THEMATIC_VOCAB_PACKS.length} пакета):`);
+for (const pack of THEMATIC_VOCAB_PACKS) {
+  let packAudioBytes = 0;
+  for (const item of pack.words) {
+    const parsed = VocabItemSchema.safeParse(item);
+    if (!parsed.success) {
+      console.error(`  ❌ Ошибка схемы VocabItem в пакете ${pack.id} (${item.id}):`, parsed.error.format());
+      hasErrors = true;
+    }
+    const targets = extractSpellingTargets(item.pl);
+    if (targets.length === 0) {
+      console.error(`  ❌ Пустой эталон для диктанта/правописания в ${item.id}`);
+      hasErrors = true;
+    }
+    if (item.audioUrl) {
+      const filePath = path.join(PUBLIC_DIR, item.audioUrl.replace(/^\//, ''));
+      if (!fs.existsSync(filePath)) {
+        console.error(`  ❌ Отсутствует аудиофайл пакета слов: ${item.audioUrl}`);
+        hasErrors = true;
+      } else {
+        packAudioBytes += fs.statSync(filePath).size;
+      }
+    }
+  }
+  console.log(
+    `  ✅ Пакет [${pack.id}] "${pack.titleRu}": ${pack.words.length} слов, аудио проверено (${Math.round(
+      packAudioBytes / 1024
+    )} КБ)`
+  );
+}
+console.log('');
+
 if (hasErrors) {
   console.error('❌ Скан выявил ошибки! Исправьте их перед выпуском релиза.');
   process.exit(1);
 } else {
-  console.log('🎉 ВСЕ МОДУЛИ УСПЕШНО ПРОШЛИ СКАН И ПРОВЕРКУ КАЧЕСТВА!');
+  console.log('🎉 ВСЕ МОДУЛИ И СЛОВАРНЫЕ ПАКЕТЫ УСПЕШНО ПРОШЛИ СКАН И ПРОВЕРКУ КАЧЕСТВА!');
 }

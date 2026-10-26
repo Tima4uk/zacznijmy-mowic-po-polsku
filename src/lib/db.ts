@@ -32,12 +32,24 @@ export interface UserMetaRecord {
   correctFirstTryCount: number;
 }
 
+export interface CustomWordRecord {
+  id: string;
+  profileId: string;
+  pl: string;
+  ru: string;
+  pronunciationHint?: string;
+  examplePl?: string;
+  exampleRu?: string;
+  createdAt: number;
+}
+
 class PolishAppDatabase extends Dexie {
   profiles!: EntityTable<UserProfile, 'id'>;
   completedItems!: EntityTable<CompletedItemRecord>;
   srsCards!: EntityTable<SrsCardState>;
   interferenceLogs!: EntityTable<InterferenceErrorLog, 'id'>;
   userMeta!: EntityTable<UserMetaRecord, 'key'>;
+  customWords!: EntityTable<CustomWordRecord, 'id'>;
 
   constructor() {
     super('ZaczynamMowicPoPolskuDB');
@@ -98,6 +110,16 @@ class PolishAppDatabase extends Dexie {
           .filter((log) => !log.profileId)
           .modify({ profileId: DEFAULT_PROFILE_ID });
       });
+
+    // Версия 4: пользовательский словарь (собственные слова и фразы для тренировки на слух и правописания)
+    this.version(4).stores({
+      profiles: 'id, name, createdAt',
+      completedItems: '[profileId+itemId], profileId, itemId, moduleId, itemType',
+      srsCards: '[profileId+vocabId], profileId, vocabId, moduleId, stage, dueTimestamp',
+      interferenceLogs: '++id, profileId, tag, exerciseId, timestamp',
+      userMeta: 'key',
+      customWords: 'id, profileId, pl, createdAt',
+    });
   }
 }
 

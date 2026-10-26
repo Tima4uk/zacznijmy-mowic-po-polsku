@@ -2,11 +2,13 @@ import fs from 'fs';
 import path from 'path';
 import { describe, it, expect } from 'vitest';
 import { ALL_MODULES } from '@/content/modules';
-import { CourseModuleSchema } from '@/lib/schema';
+import { THEMATIC_VOCAB_PACKS } from '@/content/vocab-packs';
+import { CourseModuleSchema, VocabItemSchema } from '@/lib/schema';
 import {
   validatePolishAnswer,
   stripPolishDiacritics,
   normalizeText,
+  extractSpellingTargets,
 } from '@/lib/validator';
 import { Exercise, SkillType } from '@/types/curriculum';
 
@@ -277,6 +279,46 @@ describe.each(ALL_MODULES)(
       expect(difficultiesPresent.has(1)).toBe(true);
       expect(difficultiesPresent.has(2)).toBe(true);
       expect(difficultiesPresent.has(3)).toBe(true);
+    });
+  }
+);
+
+describe.each(THEMATIC_VOCAB_PACKS)(
+  'Аудит тематического пакета расширения словаря $id ($titleRu)',
+  (pack) => {
+    it('1. Все слова пакета проходят валидацию VocabItemSchema и имеют уникальные ID', () => {
+      const ids = new Set<string>();
+      for (const item of pack.words) {
+        const parsed = VocabItemSchema.safeParse(item);
+        expect(parsed.success, `Ошибка схемы в слове ${item.id}`).toBe(true);
+        expect(ids.has(item.id)).toBe(false);
+        ids.add(item.id);
+      }
+    });
+
+    it('2. Все аудиофайлы пакета существуют на диске и корректны для режима «На слух» и «Прописать»', () => {
+      for (const item of pack.words) {
+        expect(item.audioUrl).toBeDefined();
+        const relativePath = item.audioUrl!.replace(/^\//, '');
+        const fullPath = path.join(PUBLIC_DIR, relativePath);
+        expect(
+          fs.existsSync(fullPath),
+          `Отсутствует аудиофайл словарного пакета: ${item.audioUrl}`
+        ).toBe(true);
+        expect(fs.statSync(fullPath).size).toBeGreaterThan(1000);
+
+        const targets = extractSpellingTargets(item.pl);
+        expect(targets.length).toBeGreaterThan(0);
+        for (const t of targets) {
+          const check = validatePolishAnswer(t, targets);
+          expect(check.isCorrect).toBe(true);
+        }
+
+        for (const srsAns of item.srsAcceptedAnswers) {
+          const srsCheck = validatePolishAnswer(srsAns, item.srsAcceptedAnswers);
+          expect(srsCheck.isCorrect).toBe(true);
+        }
+      }
     });
   }
 );

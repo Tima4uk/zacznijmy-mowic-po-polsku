@@ -150,6 +150,26 @@ AUDIO_MODULES = {
             "zajmować się. Czym się Pani zajmuje zawodowo?",
         ),
     ],
+    "vocab-packs": [
+        ("vp-time-01.mp3", VOICE_FEMALE, "dzisiaj. Dzisiaj pracuję w domu."),
+        ("vp-time-02.mp3", VOICE_MALE, "wczoraj. Wczoraj wieczorem byłem w sklepie."),
+        ("vp-time-03.mp3", VOICE_FEMALE, "wieczorem. Wieczorem uczę się polskiego."),
+        ("vp-time-04.mp3", VOICE_MALE, "poniedziałek. Urząd jest czynny w poniedziałek."),
+        ("vp-time-05.mp3", VOICE_FEMALE, "piątek. W piątek kończę pracę wcześniej."),
+        ("vp-time-06.mp3", VOICE_FEMALE, "godzina. Która jest teraz godzina?"),
+        ("vp-shop-01.mp3", VOICE_MALE, "chleb. Poproszę świeży chleb."),
+        ("vp-shop-02.mp3", VOICE_FEMALE, "kawa. Ciepła kawa z mlekiem."),
+        ("vp-shop-03.mp3", VOICE_FEMALE, "owoce. Kupuję świeże owoce: jabłka i banany."),
+        ("vp-shop-04.mp3", VOICE_MALE, "warzywa. Pomidory i ogórki to zdrowe warzywa."),
+        ("vp-shop-05.mp3", VOICE_FEMALE, "paragon. Czy potrzebuje Pan paragon?"),
+        ("vp-shop-06.mp3", VOICE_MALE, "gotówka. Płaci Pan kartą czy gotówką?"),
+        ("vp-city-01.mp3", VOICE_FEMALE, "dowód osobisty. Proszę pokazać paszport lub dowód osobisty."),
+        ("vp-city-02.mp3", VOICE_MALE, "podpis. Tutaj na dole jest potrzebny Pana podpis."),
+        ("vp-city-03.mp3", VOICE_FEMALE, "wejście. Główne wejście do urzędu jest od ulicy."),
+        ("vp-city-04.mp3", VOICE_MALE, "wyjście. Wyjście ewakuacyjne jest po prawej stronie."),
+        ("vp-city-05.mp3", VOICE_FEMALE, "przystanek. Przystanek autobusowy jest blisko domu."),
+        ("vp-city-06.mp3", VOICE_MALE, "dworzec. Pociąg przyjeżdża na Dworzec Centralny."),
+    ],
 }
 
 

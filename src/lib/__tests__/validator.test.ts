@@ -1,7 +1,17 @@
 import { describe, it, expect } from 'vitest';
-import { validatePolishAnswer } from '../validator';
+import { validatePolishAnswer, extractSpellingTargets } from '../validator';
 
 describe('validatePolishAnswer', () => {
+  it('extracts clean spelling targets from dictionary headwords with parens or slashes', () => {
+    const verbTargets = extractSpellingTargets('pracować (pracuję, pracuje)');
+    expect(verbTargets).toContain('pracować');
+    expect(validatePolishAnswer('pracować', verbTargets).isCorrect).toBe(true);
+
+    const slashTargets = extractSpellingTargets('Białorusin / Białorusinka');
+    expect(slashTargets).toContain('Białorusin');
+    expect(slashTargets).toContain('Białorusinka');
+    expect(validatePolishAnswer('Białorusin', slashTargets).isCorrect).toBe(true);
+  });
   it('accepts exact match ignoring case and punctuation', () => {
     const res = validatePolishAnswer('gdzie pani mieszka, mieszkam w warszawie!', [
       'Gdzie Pani mieszka? Mieszkam w Warszawie.',

@@ -15,9 +15,13 @@ import {
   AlertTriangle,
   Compass,
   Layers,
-  Users,
+  Headphones,
+  PenTool,
+  Plus,
+  Trash2,
 } from 'lucide-react';
 import { ALL_MODULES, getModuleById } from '@/content/modules';
+import { THEMATIC_VOCAB_PACKS, getAllPackWords } from '@/content/vocab-packs';
 import { COURSE_ROADMAP } from '@/content/roadmap';
 import { useAppStore } from '@/store/useAppStore';
 import { LessonRunner } from '@/components/LessonRunner';
@@ -28,6 +32,8 @@ import { GrammarDialog } from '@/components/GrammarDialog';
 import { ProfileModal } from '@/components/ProfileModal';
 import { InstallPrompt } from '@/components/InstallPrompt';
 import { playPolishAudio } from '@/lib/audio';
+
+const POLISH_DIACRITIC_KEYS = ['ą', 'ć', 'ę', 'ł', 'ń', 'ó', 'ś', 'ź', 'ż'];
 
 export default function HomePage() {
   const {
@@ -41,6 +47,9 @@ export default function HomePage() {
     setProfileModalOpen,
     completedItems,
     srsCards,
+    customWords,
+    addCustomWord,
+    deleteCustomWord,
     interferenceLogs,
     streakDays,
     totalExercisesSolved,
@@ -50,11 +59,29 @@ export default function HomePage() {
   const [isGrammarOpen, setIsGrammarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'lessons' | 'vocab' | 'roadmap'>('lessons');
 
+  // Состояние формы добавления своего слова
+  const [newWordPl, setNewWordPl] = useState('');
+  const [newWordRu, setNewWordRu] = useState('');
+
   useEffect(() => {
     hydrateFromDb();
   }, [hydrateFromDb]);
 
   const activeModule = getModuleById(selectedModuleId);
+  const totalBuiltInWords =
+    ALL_MODULES.reduce((acc, m) => acc + m.vocabulary.length, 0) +
+    getAllPackWords().length;
+
+  async function handleAddCustomWord(e: React.FormEvent) {
+    e.preventDefault();
+    if (!newWordPl.trim() || !newWordRu.trim()) return;
+    await addCustomWord({
+      pl: newWordPl,
+      ru: newWordRu,
+    });
+    setNewWordPl('');
+    setNewWordRu('');
+  }
 
   const accuracyPercent =
     totalExercisesSolved > 0
@@ -208,14 +235,40 @@ export default function HomePage() {
                   </p>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => setView({ mode: 'srs_session' })}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-red-600 px-5 py-3 text-sm font-bold text-white shadow-xs hover:bg-red-700 transition-colors shrink-0"
-                >
-                  <Brain className="h-4 w-4" aria-hidden="true" />
-                  Тренировка слов SRS ({activeModule.vocabulary.length})
-                </button>
+                <div className="flex flex-wrap items-center gap-2 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setView({ mode: 'srs_session', drillMode: 'dictation' })
+                    }
+                    className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-slate-900 px-3.5 py-2.5 text-xs sm:text-sm font-bold text-white shadow-xs hover:bg-slate-800 transition-colors"
+                  >
+                    <Headphones className="h-4 w-4 text-red-400" aria-hidden="true" />
+                    На слух
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setView({ mode: 'srs_session', drillMode: 'spelling' })
+                    }
+                    className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-indigo-600 px-3.5 py-2.5 text-xs sm:text-sm font-bold text-white shadow-xs hover:bg-indigo-700 transition-colors"
+                  >
+                    <PenTool className="h-4 w-4" aria-hidden="true" />
+                    Прописать
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setView({ mode: 'srs_session', drillMode: 'context' })
+                    }
+                    className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-red-600 px-4 py-2.5 text-xs sm:text-sm font-bold text-white shadow-xs hover:bg-red-700 transition-colors"
+                  >
+                    <Brain className="h-4 w-4" aria-hidden="true" />
+                    SRS ({activeModule.vocabulary.length})
+                  </button>
+                </div>
               </div>
 
               {/* Measurable Learning Metrics */}
@@ -252,10 +305,10 @@ export default function HomePage() {
 
                 <div className="rounded-xl border border-slate-200 bg-slate-50 p-3.5">
                   <span className="text-xs font-medium text-slate-500 block">
-                    Всего в базе курса
+                    Словарный запас в базе
                   </span>
                   <span className="text-sm font-bold text-red-700 block mt-0.5">
-                    {ALL_MODULES.length} модуля • 24 карточки SRS
+                    {totalBuiltInWords} слов курса + {customWords.length} своих
                   </span>
                 </div>
               </div>
@@ -264,12 +317,12 @@ export default function HomePage() {
             {/* Navigation Tabs */}
             <nav
               aria-label="Разделы обучения"
-              className="flex border-b border-slate-200 gap-2"
+              className="flex border-b border-slate-200 gap-2 overflow-x-auto"
             >
               <button
                 type="button"
                 onClick={() => setActiveTab('lessons')}
-                className={`inline-flex items-center gap-2 border-b-2 px-4 py-2.5 text-sm font-bold transition-colors ${
+                className={`inline-flex items-center gap-2 border-b-2 px-4 py-2.5 text-sm font-bold transition-colors whitespace-nowrap ${
                   activeTab === 'lessons'
                     ? 'border-red-600 text-red-700'
                     : 'border-transparent text-slate-600 hover:text-slate-900'
@@ -282,14 +335,14 @@ export default function HomePage() {
               <button
                 type="button"
                 onClick={() => setActiveTab('vocab')}
-                className={`inline-flex items-center gap-2 border-b-2 px-4 py-2.5 text-sm font-bold transition-colors ${
+                className={`inline-flex items-center gap-2 border-b-2 px-4 py-2.5 text-sm font-bold transition-colors whitespace-nowrap ${
                   activeTab === 'vocab'
                     ? 'border-red-600 text-red-700'
                     : 'border-transparent text-slate-600 hover:text-slate-900'
                 }`}
               >
                 <Volume2 className="h-4 w-4" aria-hidden="true" />
-                Словарь с озвучкой ({activeModule.vocabulary.length})
+                Словарный запас: на слух и письмо ({totalBuiltInWords + customWords.length})
               </button>
 
               <button
@@ -471,25 +524,341 @@ export default function HomePage() {
               </div>
             )}
 
-            {/* Tab 2: Vocabulary with Neural Polish TTS */}
+            {/* Tab 2: Vocabulary Expansion Studio (Listening, Writing, Thematic Packs & Custom Words) */}
             {activeTab === 'vocab' && (
-              <section className="space-y-4">
-                <div className="flex flex-wrap items-center justify-between gap-2">
+              <section className="space-y-6">
+                {/* 1. Три режима активного расширения словарного запаса */}
+                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-2xs space-y-4">
+                  <div>
+                    <h2 className="text-lg font-extrabold text-slate-900">
+                      Тренажёр активного словарного запаса (A0 → B2)
+                    </h2>
+                    <p className="text-xs sm:text-sm text-slate-600">
+                      Чтобы уверенно перейти с A1 на B1/B2 и сдать письменную и устную части экзамена, недостаточно узнавать слова глазами — нужно понимать их на слух и уметь безошибочно прописывать по памяти.
+                    </p>
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 flex flex-col justify-between gap-3">
+                      <div className="space-y-1">
+                        <span className="inline-flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider text-slate-800">
+                          <Headphones className="h-4 w-4 text-red-600" aria-hidden="true" />
+                          1. На слух (Аудиодиктант)
+                        </span>
+                        <p className="text-xs text-slate-600 leading-relaxed">
+                          Диктор произносит польское слово или фразу (обычно и медленно 0.78x). Ваша задача — записать услышанное без подглядывания в текст.
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setView({ mode: 'srs_session', drillMode: 'dictation' })
+                        }
+                        className="w-full rounded-xl bg-slate-900 px-3.5 py-2.5 text-xs font-bold text-white hover:bg-slate-800"
+                      >
+                        Запустить аудиодиктант →
+                      </button>
+                    </div>
+
+                    <div className="rounded-xl border border-indigo-200 bg-indigo-50/50 p-4 flex flex-col justify-between gap-3">
+                      <div className="space-y-1">
+                        <span className="inline-flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider text-indigo-950">
+                          <PenTool className="h-4 w-4 text-indigo-600" aria-hidden="true" />
+                          2. Прописать (RU → PL)
+                        </span>
+                        <p className="text-xs text-slate-600 leading-relaxed">
+                          Перевод с русского на польский по памяти. Тренирует орфографию (rz/ż, ch/h, ą/ę, ś/ć) и защищает от восточнославянских калек.
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setView({ mode: 'srs_session', drillMode: 'spelling' })
+                        }
+                        className="w-full rounded-xl bg-indigo-600 px-3.5 py-2.5 text-xs font-bold text-white hover:bg-indigo-700"
+                      >
+                        Тренировать правописание →
+                      </button>
+                    </div>
+
+                    <div className="rounded-xl border border-red-200 bg-red-50/40 p-4 flex flex-col justify-between gap-3">
+                      <div className="space-y-1">
+                        <span className="inline-flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider text-red-950">
+                          <Brain className="h-4 w-4 text-red-600" aria-hidden="true" />
+                          3. В контексте (Морфология SRS)
+                        </span>
+                        <p className="text-xs text-slate-600 leading-relaxed">
+                          Двухступенчатое интервальное повторение: от узнавания слова до вставки нужного падежа или лица глагола в живую фразу.
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setView({ mode: 'srs_session', drillMode: 'context' })
+                        }
+                        className="w-full rounded-xl bg-red-600 px-3.5 py-2.5 text-xs font-bold text-white hover:bg-red-700"
+                      >
+                        Открыть морфологию SRS →
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2. Тематические пакеты расширения словаря */}
+                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-2xs space-y-4">
+                  <div>
+                    <h3 className="text-base font-extrabold text-slate-900">
+                      Тематические наборы слов для жизни в Польше ({getAllPackWords().length} слов с озвучкой)
+                    </h3>
+                    <p className="text-xs text-slate-500">
+                      Дополнительные лексические блоки сверх базовых уроков: числа и дни недели, покупки в супермаркете и пекарне, документы и ориентация в ужонде.
+                    </p>
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    {THEMATIC_VOCAB_PACKS.map((pack) => (
+                      <article
+                        key={pack.id}
+                        className="rounded-xl border border-slate-200 bg-slate-50/70 p-4 flex flex-col justify-between gap-3"
+                      >
+                        <div className="space-y-1.5">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-lg">{pack.iconEmoji}</span>
+                            <span className="rounded-md bg-white px-2 py-0.5 text-[11px] font-bold text-slate-700 border border-slate-200">
+                              Уровень {pack.level} • {pack.words.length} слов
+                            </span>
+                          </div>
+                          <h4 className="text-sm font-bold text-slate-900">{pack.titleRu}</h4>
+                          <p className="text-xs text-slate-600">{pack.descriptionRu}</p>
+                          <p className="text-[11px] text-slate-500 pt-1">
+                            Слова:{' '}
+                            <span className="font-medium text-slate-700">
+                              {pack.words.map((i) => i.pl).join(', ')}
+                            </span>
+                          </p>
+                        </div>
+
+                        <div className="flex flex-wrap gap-2 pt-1">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setView({
+                                mode: 'srs_session',
+                                drillMode: 'dictation',
+                                packId: pack.id,
+                              })
+                            }
+                            className="flex-1 inline-flex items-center justify-center gap-1 rounded-lg bg-slate-900 px-2.5 py-2 text-xs font-bold text-white hover:bg-slate-800"
+                          >
+                            <Headphones className="h-3.5 w-3.5" aria-hidden="true" />
+                            На слух
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setView({
+                                mode: 'srs_session',
+                                drillMode: 'spelling',
+                                packId: pack.id,
+                              })
+                            }
+                            className="flex-1 inline-flex items-center justify-center gap-1 rounded-lg bg-indigo-600 px-2.5 py-2 text-xs font-bold text-white hover:bg-indigo-700"
+                          >
+                            <PenTool className="h-3.5 w-3.5" aria-hidden="true" />
+                            Прописать
+                          </button>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 3. Личный словарь пользователя (добавление своих слов из жизни в Польше) */}
+                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-2xs space-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <h3 className="text-base font-extrabold text-slate-900">
+                        ⭐ Мои личные слова ({customWords.length})
+                      </h3>
+                      <p className="text-xs text-slate-500">
+                        Услышали новое слово на работе, в магазине или в ужонде? Добавьте его сюда — оно сразу получит польскую озвучку (Web Speech API) и попадёт в тренажёр диктанта и правописания.
+                      </p>
+                    </div>
+                    {customWords.length > 0 && (
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setView({
+                              mode: 'srs_session',
+                              drillMode: 'dictation',
+                              packId: 'custom_words',
+                            })
+                          }
+                          className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-3 py-2 text-xs font-bold text-white hover:bg-slate-800"
+                        >
+                          <Headphones className="h-3.5 w-3.5" aria-hidden="true" />
+                          Диктант по моим словам
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setView({
+                              mode: 'srs_session',
+                              drillMode: 'spelling',
+                              packId: 'custom_words',
+                            })
+                          }
+                          className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3 py-2 text-xs font-bold text-white hover:bg-indigo-700"
+                        >
+                          <PenTool className="h-3.5 w-3.5" aria-hidden="true" />
+                          Прописать мои слова
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  <form
+                    onSubmit={handleAddCustomWord}
+                    className="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-3"
+                  >
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div>
+                        <label
+                          htmlFor="custom-word-pl"
+                          className="block text-xs font-bold text-slate-700 mb-1"
+                        >
+                          Слово или фраза по-польски *
+                        </label>
+                        <input
+                          id="custom-word-pl"
+                          type="text"
+                          required
+                          value={newWordPl}
+                          onChange={(e) => setNewWordPl(e.target.value)}
+                          placeholder="Напр.: zaświadczenie / umowa najmu"
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-red-600 focus:outline-hidden"
+                        />
+                      </div>
+                      <div>
+                        <label
+                          htmlFor="custom-word-ru"
+                          className="block text-xs font-bold text-slate-700 mb-1"
+                        >
+                          Перевод на русский *
+                        </label>
+                        <input
+                          id="custom-word-ru"
+                          type="text"
+                          required
+                          value={newWordRu}
+                          onChange={(e) => setNewWordRu(e.target.value)}
+                          placeholder="Напр.: справка / договор аренды"
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-red-600 focus:outline-hidden"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex flex-wrap items-center gap-1">
+                        <span className="text-xs font-medium text-slate-500 mr-1">
+                          Польские буквы:
+                        </span>
+                        {POLISH_DIACRITIC_KEYS.map((ch) => (
+                          <button
+                            key={ch}
+                            type="button"
+                            onClick={() => setNewWordPl((prev) => prev + ch)}
+                            className="h-7 w-7 rounded-md border border-slate-200 bg-white text-xs font-bold text-slate-800 hover:bg-red-50 hover:border-red-300"
+                          >
+                            {ch}
+                          </button>
+                        ))}
+                      </div>
+                      <button
+                        type="submit"
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700"
+                      >
+                        <Plus className="h-4 w-4" aria-hidden="true" />
+                        Добавить в мой словарь
+                      </button>
+                    </div>
+                  </form>
+
+                  {customWords.length > 0 && (
+                    <div className="grid gap-2.5 sm:grid-cols-2">
+                      {customWords.map((cw) => (
+                        <div
+                          key={cw.id}
+                          className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-3"
+                        >
+                          <div>
+                            <p className="text-sm font-extrabold text-slate-900">{cw.pl}</p>
+                            <p className="text-xs font-medium text-emerald-800">{cw.ru}</p>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => playPolishAudio(undefined, cw.pl, false)}
+                              className="inline-flex items-center gap-1 rounded-lg bg-red-50 px-2.5 py-1.5 text-xs font-bold text-red-700 border border-red-200 hover:bg-red-100"
+                              title="Озвучить по-польски"
+                            >
+                              <Volume2 className="h-3.5 w-3.5" aria-hidden="true" />
+                              Слушать
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => deleteCustomWord(cw.id)}
+                              className="inline-flex items-center justify-center rounded-lg border border-slate-200 p-1.5 text-slate-400 hover:text-red-600 hover:border-red-200"
+                              title="Удалить слово"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* 4. Словарь текущего модуля с нейроголосами */}
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
                   <div>
                     <h2 className="text-lg font-bold text-slate-900">
-                      Словарь Модуля {activeModule.releaseNumber} с нейроголосами
+                      Словарь Модуля {activeModule.releaseNumber} ({activeModule.vocabulary.length} карточек с нейроголосами)
                     </h2>
                     <p className="text-xs text-slate-500">
                       Нажмите на кнопку динамика, чтобы прослушать эталонное польское произношение и ударение.
                     </p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setView({ mode: 'srs_session' })}
-                    className="rounded-xl bg-red-600 px-4 py-2 text-xs font-bold text-white hover:bg-red-700"
-                  >
-                    Тренировать в SRS →
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setView({
+                          mode: 'srs_session',
+                          drillMode: 'dictation',
+                          packId: 'active_module',
+                        })
+                      }
+                      className="rounded-xl bg-slate-900 px-3.5 py-2 text-xs font-bold text-white hover:bg-slate-800"
+                    >
+                      На слух ({activeModule.vocabulary.length})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setView({
+                          mode: 'srs_session',
+                          drillMode: 'spelling',
+                          packId: 'active_module',
+                        })
+                      }
+                      className="rounded-xl bg-indigo-600 px-3.5 py-2 text-xs font-bold text-white hover:bg-indigo-700"
+                    >
+                      Прописать ({activeModule.vocabulary.length})
+                    </button>
+                  </div>
                 </div>
 
                 <div className="grid gap-3 sm:grid-cols-2">
