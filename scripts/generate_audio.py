@@ -1,11 +1,14 @@
 import asyncio
 import os
+import re
 import sys
 import edge_tts
 
 sys.stdout.reconfigure(encoding="utf-8")
 
-PUBLIC_AUDIO_DIR = os.path.join(os.path.dirname(__file__), "..", "public", "audio")
+ROOT_DIR = os.path.join(os.path.dirname(__file__), "..")
+PUBLIC_AUDIO_DIR = os.path.join(ROOT_DIR, "public", "audio")
+VOCAB_PACKS_TS = os.path.join(ROOT_DIR, "src", "content", "vocab-packs.ts")
 
 VOICE_FEMALE = "pl-PL-ZofiaNeural"
 VOICE_MALE = "pl-PL-MarekNeural"
@@ -150,43 +153,56 @@ AUDIO_MODULES = {
             "zajmować się. Czym się Pani zajmuje zawodowo?",
         ),
     ],
-    "vocab-packs": [
-        ("vp-time-01.mp3", VOICE_FEMALE, "dzisiaj. Dzisiaj pracuję w domu."),
-        ("vp-time-02.mp3", VOICE_MALE, "wczoraj. Wczoraj wieczorem byłem w sklepie."),
-        ("vp-time-03.mp3", VOICE_FEMALE, "wieczorem. Wieczorem uczę się polskiego."),
-        ("vp-time-04.mp3", VOICE_MALE, "poniedziałek. Urząd jest czynny w poniedziałek."),
-        ("vp-time-05.mp3", VOICE_FEMALE, "piątek. W piątek kończę pracę wcześniej."),
-        ("vp-time-06.mp3", VOICE_FEMALE, "godzina. Która jest teraz godzina?"),
-        ("vp-shop-01.mp3", VOICE_MALE, "chleb. Poproszę świeży chleb."),
-        ("vp-shop-02.mp3", VOICE_FEMALE, "kawa. Ciepła kawa z mlekiem."),
-        ("vp-shop-03.mp3", VOICE_FEMALE, "owoce. Kupuję świeże owoce: jabłka i banany."),
-        ("vp-shop-04.mp3", VOICE_MALE, "warzywa. Pomidory i ogórki to zdrowe warzywa."),
-        ("vp-shop-05.mp3", VOICE_FEMALE, "paragon. Czy potrzebuje Pan paragon?"),
-        ("vp-shop-06.mp3", VOICE_MALE, "gotówka. Płaci Pan kartą czy gotówką?"),
-        ("vp-city-01.mp3", VOICE_FEMALE, "dowód osobisty. Proszę pokazać paszport lub dowód osobisty."),
-        ("vp-city-02.mp3", VOICE_MALE, "podpis. Tutaj na dole jest potrzebny Pana podpis."),
-        ("vp-city-03.mp3", VOICE_FEMALE, "wejście. Główne wejście do urzędu jest od ulicy."),
-        ("vp-city-04.mp3", VOICE_MALE, "wyjście. Wyjście ewakuacyjne jest po prawej stronie."),
-        ("vp-city-05.mp3", VOICE_FEMALE, "przystanek. Przystanek autobusowy jest blisko domu."),
-        ("vp-city-06.mp3", VOICE_MALE, "dworzec. Pociąg przyjeżdża na Dworzec Centralny."),
-    ],
 }
 
 
+def extract_vocab_packs_items() -> list[tuple[str, str, str]]:
+    """Автоматически извлекает все слова и примеры из src/content/vocab-packs.ts."""
+    with open(VOCAB_PACKS_TS, "r", encoding="utf-8") as f:
+        content = f.read()
+
+    pattern = re.compile(
+        r"id:\s*'([^']+)'\s*,\s*pl:\s*'([^']+)'[\s\S]*?exPl:\s*'([^']+)'",
+        re.MULTILINE,
+    )
+    matches = pattern.findall(content)
+    items: list[tuple[str, str, str]] = []
+    for idx, (item_id, pl_word, ex_pl) in enumerate(matches):
+        clean_pl = re.sub(r"\s*\([^)]*\)", "", pl_word).strip()
+        voice = VOICE_FEMALE if idx % 2 == 0 else VOICE_MALE
+        text = f"{clean_pl}. {ex_pl}"
+        items.append((f"{item_id}.mp3", voice, text))
+    return items
+
+
+async def generate_one(
+    sem: asyncio.Semaphore, mod_id: str, mod_dir: str, filename: str, voice: str, text: str
+) -> None:
+    filepath = os.path.join(mod_dir, filename)
+    if os.path.exists(filepath) and os.path.getsize(filepath) > 1000:
+        return
+    async with sem:
+        communicate = edge_tts.Communicate(text=text, voice=voice, rate="-5%")
+        await communicate.save(filepath)
+        print(f"  [+] Создан {mod_id}/{filename} ({voice})")
+
+
 async def generate_all() -> None:
-    for mod_id, items in AUDIO_MODULES.items():
+    all_modules = dict(AUDIO_MODULES)
+    all_modules["vocab-packs"] = extract_vocab_packs_items()
+
+    sem = asyncio.Semaphore(8)
+
+    for mod_id, items in all_modules.items():
         mod_dir = os.path.join(PUBLIC_AUDIO_DIR, mod_id)
         os.makedirs(mod_dir, exist_ok=True)
         print(f"Проверка и генерация {len(items)} аудиофайлов для {mod_id}...")
-        for filename, voice, text in items:
-            filepath = os.path.join(mod_dir, filename)
-            if os.path.exists(filepath) and os.path.getsize(filepath) > 1000:
-                print(f"  [OK] {mod_id}/{filename}")
-                continue
-            communicate = edge_tts.Communicate(text=text, voice=voice, rate="-5%")
-            await communicate.save(filepath)
-            print(f"  [+] Создан {mod_id}/{filename} ({voice})")
-    print("Готово! Все аудиофайлы всех модулей созданы.")
+        tasks = [
+            generate_one(sem, mod_id, mod_dir, filename, voice, text)
+            for filename, voice, text in items
+        ]
+        await asyncio.gather(*tasks)
+    print("Готово! Все аудиофайлы всех модулей и словарных пакетов созданы.")
 
 
 if __name__ == "__main__":

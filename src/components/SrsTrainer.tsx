@@ -12,9 +12,10 @@ import {
   PenTool,
   Layers,
   Eye,
+  Shuffle,
 } from 'lucide-react';
 import { ALL_MODULES, getModuleById } from '@/content/modules';
-import { THEMATIC_VOCAB_PACKS } from '@/content/vocab-packs';
+import { THEMATIC_VOCAB_PACKS, getAllPackWords } from '@/content/vocab-packs';
 import { useAppStore, VocabDrillMode } from '@/store/useAppStore';
 import { playPolishAudio } from '@/lib/audio';
 import { validatePolishAnswer, extractSpellingTargets } from '@/lib/validator';
@@ -48,17 +49,20 @@ export function SrsTrainer() {
 
   const [drillMode, setDrillMode] = useState<VocabDrillMode>(initialDrillMode);
   const [sourceDeck, setSourceDeck] = useState<string>(initialSource);
+  const [batchLimit, setBatchLimit] = useState<number>(20);
+  const [shuffleSeed, setShuffleSeed] = useState<number>(0);
 
-  // Формируем список карточек на основе выбранного источника
+  // Формируем список карточек на основе выбранного источника, перемешивания и лимита порции
   const vocabList: VocabItem[] = useMemo(() => {
+    let rawList: VocabItem[] = [];
     if (sourceDeck === 'active_module') {
-      return activeModule.vocabulary;
-    }
-    if (sourceDeck === 'all_modules') {
-      return ALL_MODULES.flatMap((m) => m.vocabulary);
-    }
-    if (sourceDeck === 'custom_words') {
-      return customWords.map((cw) => ({
+      rawList = activeModule.vocabulary;
+    } else if (sourceDeck === 'all_modules') {
+      rawList = ALL_MODULES.flatMap((m) => m.vocabulary);
+    } else if (sourceDeck === 'all_course') {
+      rawList = [...ALL_MODULES.flatMap((m) => m.vocabulary), ...getAllPackWords()];
+    } else if (sourceDeck === 'custom_words') {
+      rawList = customWords.map((cw) => ({
         id: cw.id,
         pl: cw.pl,
         ru: cw.ru,
@@ -75,13 +79,21 @@ export function SrsTrainer() {
         srsAcceptedAnswers: extractSpellingTargets(cw.pl),
         srsBaseHint: cw.ru,
       }));
+    } else {
+      const foundPack = THEMATIC_VOCAB_PACKS.find((p) => p.id === sourceDeck);
+      rawList = foundPack ? foundPack.words : activeModule.vocabulary;
     }
-    const foundPack = THEMATIC_VOCAB_PACKS.find((p) => p.id === sourceDeck);
-    if (foundPack) {
-      return foundPack.words;
+
+    const listCopy = [...rawList];
+    if (shuffleSeed > 0) {
+      for (let i = listCopy.length - 1; i > 0; i--) {
+        const j = (i * 17 + shuffleSeed * 31) % (i + 1);
+        [listCopy[i], listCopy[j]] = [listCopy[j], listCopy[i]];
+      }
     }
-    return activeModule.vocabulary;
-  }, [sourceDeck, activeModule, customWords]);
+
+    return batchLimit > 0 ? listCopy.slice(0, batchLimit) : listCopy;
+  }, [sourceDeck, activeModule, customWords, batchLimit, shuffleSeed]);
 
   const [cardIndex, setCardIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
@@ -200,24 +212,27 @@ export function SrsTrainer() {
             </p>
           </div>
 
-          {/* Выбор колоды */}
-          <div className="flex items-center gap-2">
+          {/* Выбор колоды, размера порции и перемешивание */}
+          <div className="flex flex-wrap items-center gap-2">
             <Layers className="h-4 w-4 text-slate-400 shrink-0" aria-hidden="true" />
             <select
               value={sourceDeck}
               onChange={(e) => handleSelectDeck(e.target.value)}
               aria-label="Выбор набора слов"
-              className="rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-800 focus:border-red-600 focus:outline-none"
+              className="rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-800 focus:border-red-600 focus:outline-none max-w-[260px] sm:max-w-xs"
             >
               <option value="active_module">
                 Текущий Модуль {activeModule.releaseNumber} ({activeModule.vocabulary.length} слов)
+              </option>
+              <option value="all_course">
+                🌐 Вся база курса A0–B2 ({ALL_MODULES.flatMap((m) => m.vocabulary).length + getAllPackWords().length} слова)
               </option>
               <option value="all_modules">
                 Все открытые модули ({ALL_MODULES.flatMap((m) => m.vocabulary).length} слова)
               </option>
               {THEMATIC_VOCAB_PACKS.map((pack) => (
                 <option key={pack.id} value={pack.id}>
-                  {pack.iconEmoji} Пакет: {pack.titleRu} ({pack.words.length} слов)
+                  {pack.iconEmoji} [{pack.level}] {pack.titleRu} ({pack.words.length})
                 </option>
               ))}
               {customWords.length > 0 && (
@@ -226,6 +241,38 @@ export function SrsTrainer() {
                 </option>
               )}
             </select>
+
+            <select
+              value={batchLimit}
+              onChange={(e) => {
+                setBatchLimit(Number(e.target.value));
+                setCardIndex(0);
+                setSessionDone(false);
+                resetCardState();
+              }}
+              aria-label="Размер сессии"
+              className="rounded-xl border border-slate-300 bg-slate-50 px-2.5 py-2 text-xs font-bold text-slate-700 focus:border-red-600 focus:outline-none"
+            >
+              <option value={10}>По 10 слов</option>
+              <option value={20}>По 20 слов</option>
+              <option value={50}>По 50 слов</option>
+              <option value={0}>Все сразу</option>
+            </select>
+
+            <button
+              type="button"
+              onClick={() => {
+                setShuffleSeed((s) => s + 1);
+                setCardIndex(0);
+                setSessionDone(false);
+                resetCardState();
+              }}
+              className="inline-flex items-center gap-1 rounded-xl border border-slate-300 bg-white px-2.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100"
+              title="Перемешать карточки"
+            >
+              <Shuffle className="h-3.5 w-3.5 text-red-600" aria-hidden="true" />
+              Перемешать
+            </button>
           </div>
         </div>
 

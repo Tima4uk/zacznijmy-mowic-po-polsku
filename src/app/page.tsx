@@ -59,9 +59,11 @@ export default function HomePage() {
   const [isGrammarOpen, setIsGrammarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'lessons' | 'vocab' | 'roadmap'>('lessons');
 
-  // Состояние формы добавления своего слова
+  // Состояние формы добавления своего слова и поиска по базе 224+ слов
   const [newWordPl, setNewWordPl] = useState('');
   const [newWordRu, setNewWordRu] = useState('');
+  const [vocabFilterSource, setVocabFilterSource] = useState<string>('all_course');
+  const [vocabSearchQuery, setVocabSearchQuery] = useState<string>('');
 
   useEffect(() => {
     hydrateFromDb();
@@ -71,6 +73,30 @@ export default function HomePage() {
   const totalBuiltInWords =
     ALL_MODULES.reduce((acc, m) => acc + m.vocabulary.length, 0) +
     getAllPackWords().length;
+
+  const displayedVocabItems = React.useMemo(() => {
+    let base =
+      vocabFilterSource === 'active_module'
+        ? activeModule.vocabulary
+        : vocabFilterSource === 'all_course'
+        ? [...ALL_MODULES.flatMap((m) => m.vocabulary), ...getAllPackWords()]
+        : THEMATIC_VOCAB_PACKS.find((p) => p.id === vocabFilterSource)?.words ??
+          activeModule.vocabulary;
+
+    const q = vocabSearchQuery.trim().toLowerCase();
+    if (q) {
+      base = base.filter(
+        (item) =>
+          item.pl.toLowerCase().includes(q) ||
+          item.ru.toLowerCase().includes(q) ||
+          item.examples.some(
+            (ex) =>
+              ex.pl.toLowerCase().includes(q) || ex.ru.toLowerCase().includes(q)
+          )
+      );
+    }
+    return base;
+  }, [vocabFilterSource, vocabSearchQuery, activeModule]);
 
   async function handleAddCustomWord(e: React.FormEvent) {
     e.preventDefault();
@@ -821,48 +847,78 @@ export default function HomePage() {
                   )}
                 </div>
 
-                {/* 4. Словарь текущего модуля с нейроголосами */}
-                <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
-                  <div>
-                    <h2 className="text-lg font-bold text-slate-900">
-                      Словарь Модуля {activeModule.releaseNumber} ({activeModule.vocabulary.length} карточек с нейроголосами)
-                    </h2>
-                    <p className="text-xs text-slate-500">
-                      Нажмите на кнопку динамика, чтобы прослушать эталонное польское произношение и ударение.
-                    </p>
+                {/* 4. Полный словарь курса и пакетов с поиском и нейроголосами */}
+                <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-2xs space-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <h2 className="text-lg font-extrabold text-slate-900">
+                        Полный словарь с нейроголосами ({displayedVocabItems.length} из {totalBuiltInWords} слов)
+                      </h2>
+                      <p className="text-xs text-slate-500">
+                        Ищите слова по-польски или по-русски, фильтруйте по темам и слушайте эталонное произношение.
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setView({
+                            mode: 'srs_session',
+                            drillMode: 'dictation',
+                            packId: vocabFilterSource,
+                          })
+                        }
+                        className="rounded-xl bg-slate-900 px-3.5 py-2 text-xs font-bold text-white hover:bg-slate-800"
+                      >
+                        На слух ({displayedVocabItems.length})
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setView({
+                            mode: 'srs_session',
+                            drillMode: 'spelling',
+                            packId: vocabFilterSource,
+                          })
+                        }
+                        className="rounded-xl bg-indigo-600 px-3.5 py-2 text-xs font-bold text-white hover:bg-indigo-700"
+                      >
+                        Прописать ({displayedVocabItems.length})
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setView({
-                          mode: 'srs_session',
-                          drillMode: 'dictation',
-                          packId: 'active_module',
-                        })
-                      }
-                      className="rounded-xl bg-slate-900 px-3.5 py-2 text-xs font-bold text-white hover:bg-slate-800"
+
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <input
+                      type="search"
+                      value={vocabSearchQuery}
+                      onChange={(e) => setVocabSearchQuery(e.target.value)}
+                      placeholder="🔍 Поиск слова по-польски или по-русски (напр.: umowa, врач, sklep)..."
+                      className="w-full rounded-xl border border-slate-300 bg-slate-50 px-3.5 py-2 text-xs sm:text-sm text-slate-900 focus:border-red-600 focus:bg-white focus:outline-hidden"
+                    />
+                    <select
+                      value={vocabFilterSource}
+                      onChange={(e) => setVocabFilterSource(e.target.value)}
+                      aria-label="Фильтр словаря по набору"
+                      className="w-full rounded-xl border border-slate-300 bg-slate-50 px-3.5 py-2 text-xs sm:text-sm font-bold text-slate-800 focus:border-red-600 focus:outline-hidden"
                     >
-                      На слух ({activeModule.vocabulary.length})
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setView({
-                          mode: 'srs_session',
-                          drillMode: 'spelling',
-                          packId: 'active_module',
-                        })
-                      }
-                      className="rounded-xl bg-indigo-600 px-3.5 py-2 text-xs font-bold text-white hover:bg-indigo-700"
-                    >
-                      Прописать ({activeModule.vocabulary.length})
-                    </button>
+                      <option value="all_course">
+                        🌐 Вся база курса и пакетов ({totalBuiltInWords} слова)
+                      </option>
+                      <option value="active_module">
+                        📦 Только текущий Модуль {activeModule.releaseNumber} ({activeModule.vocabulary.length} слов)
+                      </option>
+                      {THEMATIC_VOCAB_PACKS.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.iconEmoji} [{p.level}] {p.titleRu} ({p.words.length} слов)
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
 
                 <div className="grid gap-3 sm:grid-cols-2">
-                  {activeModule.vocabulary.map((item) => {
+                  {displayedVocabItems.map((item) => {
                     const card = srsCards[item.id];
                     return (
                       <article
