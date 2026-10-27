@@ -146,7 +146,7 @@ export default function HomePage() {
                 Zaczynam mówić po polsku
               </span>
               <span className="block text-xs font-medium text-slate-500">
-                Путь A0 → B1 (Rezydent UE) → B2 • Релиз 2 (v0.2.0)
+                Путь A0 → B1 (Rezydent UE) → B2 • Релиз 3 (v0.3.0)
               </span>
             </div>
           </button>

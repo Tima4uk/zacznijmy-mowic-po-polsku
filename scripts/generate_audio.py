@@ -153,6 +153,104 @@ AUDIO_MODULES = {
             "zajmować się. Czym się Pani zajmuje zawodowo?",
         ),
     ],
+    "mod-a1-02": [
+        (
+            "ex-kasa-24-zlote.mp3",
+            VOICE_FEMALE,
+            "Poproszę czarną kawę i świeżą bułkę. Razem płaci Pan dwadzieścia cztery złote.",
+        ),
+        ("dlg-1.mp3", VOICE_FEMALE, "Dzień dobry! Co dla Pana?"),
+        (
+            "dlg-2.mp3",
+            VOICE_MALE,
+            "Dzień dobry! Poproszę dużą czarną kawę i dwie świeże bułki. Po ile są dzisiaj te jabłka?",
+        ),
+        (
+            "dlg-3.mp3",
+            VOICE_FEMALE,
+            "Jabłka są po cztery złote za kilogram. Za kawę i bułki płaci Pan razem piętnaście złotych.",
+        ),
+        (
+            "dlg-4.mp3",
+            VOICE_MALE,
+            "Proszę, oto dwadzieścia złotych. Przepraszam, czy wie Pani, którędy najszybciej dojdę na dworzec i która jest teraz godzina?",
+        ),
+        (
+            "dlg-5.mp3",
+            VOICE_FEMALE,
+            "Teraz jest ósma dziesięć. Proszę iść prosto, a z przystanku obok jedzie tramwajowa ósemka prosto pod dworzec. Oto Pana reszta — pięć złotych!",
+        ),
+        (
+            "quest-npc-1.mp3",
+            VOICE_FEMALE,
+            "Dzień dobry! Co dla Pana dzisiaj podać?",
+        ),
+        (
+            "quest-npc-2.mp3",
+            VOICE_FEMALE,
+            "Razem płaci Pan dwadzieścia dwa złote. Płaci Pan kartą czy gotówką?",
+        ),
+        (
+            "voc-kosztowac.mp3",
+            VOICE_FEMALE,
+            "kosztować. Ile kosztuje ten bilet miesięczny?",
+        ),
+        (
+            "voc-zloty.mp3",
+            VOICE_MALE,
+            "złoty, dwa złote, pięć złotych. Chleb kosztuje cztery złote, a kawa piętnaście złotych.",
+        ),
+        (
+            "voc-pietnascie.mp3",
+            VOICE_FEMALE,
+            "piętnaście. Pociąg odjeżdża za piętnaście minut.",
+        ),
+        (
+            "voc-czterdziesci.mp3",
+            VOICE_MALE,
+            "czterdzieści. Podróż trwa czterdzieści minut.",
+        ),
+        (
+            "voc-osiemdziesiat.mp3",
+            VOICE_FEMALE,
+            "osiemdziesiąt. Autobus numer sto osiemdziesiąt jedzie do centrum.",
+        ),
+        (
+            "voc-dwudziesty-pierwszy.mp3",
+            VOICE_MALE,
+            "dwudziesty pierwszy. Dzisiaj jest dwudziesty pierwszy października.",
+        ),
+        (
+            "voc-osemka.mp3",
+            VOICE_FEMALE,
+            "ósemka. Jadę do pracy tramwajową ósemką.",
+        ),
+        (
+            "voc-dokad.mp3",
+            VOICE_MALE,
+            "dokąd. Dokąd idziesz tak późno?",
+        ),
+        (
+            "voc-ktoredy.mp3",
+            VOICE_FEMALE,
+            "którędy. Którędy iść na dworzec?",
+        ),
+        (
+            "voc-po-ile.mp3",
+            VOICE_MALE,
+            "po ile. Po ile są te jabłka?",
+        ),
+        (
+            "voc-ktory.mp3",
+            VOICE_FEMALE,
+            "który, która, które. Która jest godzina? Który samochód jest lepszy?",
+        ),
+        (
+            "voc-czyj.mp3",
+            VOICE_MALE,
+            "czyj, czyja, czyje. Czyj dom stoi nad rzeką? Czyje to dziecko?",
+        ),
+    ],
 }
 
 
