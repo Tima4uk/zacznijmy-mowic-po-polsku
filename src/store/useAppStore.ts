@@ -9,6 +9,13 @@ import {
   DEFAULT_PROFILE_ID,
 } from '@/lib/db';
 import { createInitialSrsCard, scheduleNextReview, SrsCardState, SrsRating } from '@/lib/srs';
+import {
+  NotificationSettings,
+  getDefaultNotificationSettings,
+  loadNotificationSettings,
+  saveNotificationSettings,
+  normalizeSettingsForToday,
+} from '@/lib/notifications';
 import { ALL_MODULES } from '@/content/modules';
 import { getAllPackWords } from '@/content/vocab-packs';
 import { InterferenceTag } from '@/types/curriculum';
@@ -40,11 +47,13 @@ interface AppState {
   streakDays: number;
   totalExercisesSolved: number;
   correctFirstTryCount: number;
+  notificationSettings: NotificationSettings;
 
   hydrateFromDb: () => Promise<void>;
   selectModule: (moduleId: string) => void;
   setView: (view: ActiveView) => void;
   setProfileModalOpen: (isOpen: boolean) => void;
+  updateNotificationSettings: (updates: Partial<NotificationSettings>) => void;
 
   createProfile: (input: NewProfileInput) => Promise<string>;
   switchProfile: (profileId: string) => Promise<void>;
@@ -96,8 +105,22 @@ export const useAppStore = create<AppState>((set, get) => ({
   streakDays: 1,
   totalExercisesSolved: 0,
   correctFirstTryCount: 0,
+  notificationSettings: getDefaultNotificationSettings(),
 
   setProfileModalOpen: (isProfileModalOpen) => set({ isProfileModalOpen }),
+
+  updateNotificationSettings: (updates) => {
+    const { currentProfile, notificationSettings } = get();
+    const normalized = normalizeSettingsForToday(notificationSettings, getTodayIso());
+    const nextSettings: NotificationSettings = {
+      ...normalized,
+      ...updates,
+    };
+    if (currentProfile) {
+      saveNotificationSettings(currentProfile.id, nextSettings);
+    }
+    set({ notificationSettings: nextSettings });
+  },
 
   selectModule: (moduleId) =>
     set({ selectedModuleId: moduleId, activeView: { mode: 'dashboard' } }),
@@ -250,6 +273,8 @@ export const useAppStore = create<AppState>((set, get) => ({
       }
     }
 
+    const profileNotifSettings = loadNotificationSettings(target.id, today);
+
     set({
       currentProfile: target,
       profiles: profiles.map((p) => (p.id === target!.id ? target! : p)),
@@ -261,6 +286,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       streakDays: target.streakDays,
       totalExercisesSolved: target.totalExercisesSolved,
       correctFirstTryCount: target.correctFirstTryCount,
+      notificationSettings: profileNotifSettings,
       isProfileModalOpen: false,
     });
   },
@@ -396,9 +422,10 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   recordAttempt: async (isCorrectFirstTry) => {
-    const { currentProfile, profiles } = get();
+    const { currentProfile, profiles, notificationSettings } = get();
     if (!currentProfile) return;
 
+    const today = getTodayIso();
     const totalExercisesSolved = currentProfile.totalExercisesSolved + 1;
     const correctFirstTryCount =
       currentProfile.correctFirstTryCount + (isCorrectFirstTry ? 1 : 0);
@@ -407,8 +434,15 @@ export const useAppStore = create<AppState>((set, get) => ({
       ...currentProfile,
       totalExercisesSolved,
       correctFirstTryCount,
-      lastActiveDate: getTodayIso(),
+      lastActiveDate: today,
     };
+
+    const normalizedNotif = normalizeSettingsForToday(notificationSettings, today);
+    const nextNotif: NotificationSettings = {
+      ...normalizedNotif,
+      todayExercisesDone: normalizedNotif.todayExercisesDone + 1,
+    };
+    saveNotificationSettings(currentProfile.id, nextNotif);
 
     if (db) {
       await db.profiles.put(updatedProfile);
@@ -421,6 +455,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       ),
       totalExercisesSolved,
       correctFirstTryCount,
+      notificationSettings: nextNotif,
     });
   },
 

@@ -251,6 +251,108 @@ AUDIO_MODULES = {
             "czyj, czyja, czyje. Czyj dom stoi nad rzeką? Czyje to dziecko?",
         ),
     ],
+    "mod-a1-03": [
+        (
+            "ex-apteka-recepta.mp3",
+            VOICE_FEMALE,
+            "Przepraszam, ale dzisiaj nie ma tego antybiotyku w naszej aptece, a ponadto nie można go kupić bez recepty od lekarza.",
+        ),
+        (
+            "dlg-1.mp3",
+            VOICE_FEMALE,
+            "Dzień dobry! Sprawdzam Pana wniosek o kartę pobytu. Widzę oryginał paszportu i umowę o pracę, ale niestety brakuje jeszcze dwóch dokumentów.",
+        ),
+        (
+            "dlg-2.mp3",
+            VOICE_MALE,
+            "Przepraszam, jakich dokładnie dokumentów brakuje w mojej teczce?",
+        ),
+        (
+            "dlg-3.mp3",
+            VOICE_FEMALE,
+            "Po pierwsze, nie ma tutaj kserokopii umowy najmu mieszkania. Po drugie, na załączniku numer jeden brakuje podpisu i pieczątki pracodawcy.",
+        ),
+        (
+            "dlg-4.mp3",
+            VOICE_MALE,
+            "Rozumiem. Punkt ksero jest blisko urzędu, więc zaraz zrobię kopię umowy najmu. A załącznik z podpisem szefa przyniosę w poniedziałek rano.",
+        ),
+        (
+            "dlg-5.mp3",
+            VOICE_FEMALE,
+            "Dobrze, ma Pan siedem dni na uzupełnienie braków formalnych. Czekam na Pana dokumenty!",
+        ),
+        (
+            "quest-npc-1.mp3",
+            VOICE_FEMALE,
+            "W Pana wniosku nie ma kserokopii paszportu i brakuje jednego podpisu.",
+        ),
+        (
+            "quest-npc-2.mp3",
+            VOICE_FEMALE,
+            "Dzień dobry! Czego Pan dzisiaj potrzebuje?",
+        ),
+        (
+            "voc-potrzebowac.mp3",
+            VOICE_FEMALE,
+            "potrzebować. Potrzebuję zaświadczenia z urzędu skarbowego.",
+        ),
+        (
+            "voc-uczyc-sie.mp3",
+            VOICE_MALE,
+            "uczyć się. Codziennie uczę się języka polskiego.",
+        ),
+        (
+            "voc-brakowac.mp3",
+            VOICE_FEMALE,
+            "brakować, brakuje. We wniosku brakuje jednego podpisu.",
+        ),
+        (
+            "voc-nie-ma.mp3",
+            VOICE_MALE,
+            "nie ma. Niestety dzisiaj nie ma tego leku w aptece.",
+        ),
+        (
+            "voc-czas.mp3",
+            VOICE_FEMALE,
+            "czas, nie mam czasu. Przepraszam, ale dzisiaj nie mam wolnego czasu.",
+        ),
+        (
+            "voc-pomoc.mp3",
+            VOICE_MALE,
+            "pomoc, potrzebuję pomocy. Dziękuję za szybką pomoc w urzędzie.",
+        ),
+        (
+            "voc-bez.mp3",
+            VOICE_FEMALE,
+            "bez. Poproszę czarną kawę bez cukru i bez mleka.",
+        ),
+        (
+            "voc-blisko.mp3",
+            VOICE_MALE,
+            "blisko. Apteka znajduje się blisko naszego domu.",
+        ),
+        (
+            "voc-obok.mp3",
+            VOICE_FEMALE,
+            "obok. Punkt ksero jest tuż obok urzędu.",
+        ),
+        (
+            "voc-kopia.mp3",
+            VOICE_MALE,
+            "kopia, kserokopia. Do wniosku trzeba dołączyć kopię paszportu.",
+        ),
+        (
+            "voc-lek.mp3",
+            VOICE_FEMALE,
+            "lek, lekarstwo. W tej aptece nie ma tego leku.",
+        ),
+        (
+            "voc-duzo.mp3",
+            VOICE_MALE,
+            "dużo, mało. W tym tygodniu mam dużo pracy i mało czasu.",
+        ),
+    ],
 }
 
 

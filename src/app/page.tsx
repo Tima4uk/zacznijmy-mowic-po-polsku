@@ -31,6 +31,7 @@ import { SrsTrainer } from '@/components/SrsTrainer';
 import { GrammarDialog } from '@/components/GrammarDialog';
 import { ProfileModal } from '@/components/ProfileModal';
 import { InstallPrompt } from '@/components/InstallPrompt';
+import { NotificationCenter } from '@/components/NotificationCenter';
 import { playPolishAudio } from '@/lib/audio';
 
 const POLISH_DIACRITIC_KEYS = ['ą', 'ć', 'ę', 'ł', 'ń', 'ó', 'ś', 'ź', 'ż'];
@@ -146,7 +147,7 @@ export default function HomePage() {
                 Zaczynam mówić po polsku
               </span>
               <span className="block text-xs font-medium text-slate-500">
-                Путь A0 → B1 (Rezydent UE) → B2 • Релиз 3 (v0.3.0)
+                Путь A0 → B1 (Rezydent UE) → B2 • Релиз 4 (v0.4.0)
               </span>
             </div>
           </button>
@@ -171,6 +172,8 @@ export default function HomePage() {
               <Flame className="h-4 w-4 text-amber-600" aria-hidden="true" />
               <span>{isHydrated ? streakDays : 1} дн.</span>
             </div>
+
+            <NotificationCenter />
 
             <button
               type="button"
